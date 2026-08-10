@@ -247,6 +247,7 @@ type I interferon receptor antagonist</textarea>
         <div class="count hot"><div class="n" id="cNew">0</div><div class="l">New</div></div>
       </div>
       <button class="btn ghost" id="sortkw">Sort by keyword</button>
+      <button class="btn ghost" id="purge">Remove off-topic</button>
       <button class="btn ghost" id="digest">Copy digest</button>
       <button class="btn ghost" id="csv">Download CSV</button>
       <button class="btn ghost" id="wipe">Clear corpus</button>
@@ -406,6 +407,20 @@ function excerpt(p){
   if(!a)return '';
   return a.length>190?a.slice(0,190).replace(/\s\S*$/,'')+'…':a;
 }
+async function purgeOffTopic(){
+  const ts=terms();
+  if(!ts.length){toast('Add search terms first');return;}
+  const before=corpus.length;
+  const junk=corpus.filter(p=>!onTopic(p,ts));
+  if(!junk.length){toast('Nothing off-topic found');return;}
+  const sample=junk.slice(0,3).map(p=>'• '+p.title.slice(0,70)).join('\n');
+  if(!confirm('Remove '+junk.length+' of '+before+' records that do not match your search terms?\n\nFor example:\n'+sample))return;
+  corpus=corpus.filter(p=>onTopic(p,ts));
+  await save();render();
+  log('Purged '+junk.length+' off-topic records','ok');
+  toast('Removed '+junk.length+' records');
+}
+
 async function ruleClassifyAll(){
   let n=0;
   corpus.forEach(p=>{
@@ -516,9 +531,29 @@ async function epmcSearch(term,cap){
   }));
 }
 
+/* ---------- relevance gate ----------
+   Crossref returns a full page of results whatever you ask it, padding with
+   progressively worse matches. It has no relevance floor, so we impose one. */
+const STOP=new Set(['the','of','a','an','and','or','for','in','on','with','to','by','from']);
+function tokenise(s){
+  return (s||'').toLowerCase()
+    .replace(/[^a-z0-9\s-]/g,' ')
+    .split(/[\s-]+/).filter(Boolean)
+    .map(t=>t==='i'?'1':(t==='ii'?'2':t))
+    .filter(t=>!STOP.has(t));
+}
+function onTopic(rec,termList){
+  const hay=new Set(tokenise((rec.title||'')+' '+(rec.abstract||'')+' '+(rec.journal||'')));
+  return termList.some(term=>{
+    const tt=tokenise(term);
+    if(!tt.length)return false;
+    return tt.filter(t=>hay.has(t)).length/tt.length>=0.7;
+  });
+}
+
 /* ---------- Crossref ---------- */
 async function crossrefSearch(term,win,cap){
-  const p=new URLSearchParams({'query.bibliographic':term,rows:String(cap),sort:'created',order:'desc'});
+  const p=new URLSearchParams({'query.bibliographic':term,rows:String(cap)});
   if(win!=='all'){
     const d=new Date();d.setDate(d.getDate()-parseInt(win,10));
     p.set('filter','from-created-date:'+d.toISOString().slice(0,10));
@@ -597,9 +632,11 @@ async function runScan(){
     }
     if($('sCross').checked){
       try{
-        const r=await crossrefSearch(term,win,cap);
-        log('  Crossref: '+r.length+' records');
-        found.push(...r);
+        const raw=await crossrefSearch(term,win,cap);
+        const kept=raw.filter(x=>onTopic(x,ts));
+        const dropped=raw.length-kept.length;
+        log('  Crossref: '+kept.length+' kept'+(dropped?', '+dropped+' off-topic discarded':''));
+        found.push(...kept);
       }catch(e){failures++;log('  Crossref failed: '+e.message,'err');}
       await sleep(300);
     }
@@ -852,6 +889,7 @@ function render(){
 $('scan').onclick=runScan;
 $('runcite').onclick=runCite;
 $('sortkw').onclick=ruleClassifyAll;
+$('purge').onclick=purgeOffTopic;
 $('classify').onclick=classifyAll;
 $('digest').onclick=copyDigest;
 $('csv').onclick=downloadCSV;
