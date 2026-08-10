@@ -9,298 +9,225 @@
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Spectral:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
 <style>
 :root{
-  --ink:#0B1220;
-  --ink-2:#151E2E;
-  --ink-3:#1F2A3C;
-  --paper:#F6F7F9;
-  --card:#FFFFFF;
-  --rule:#E2E6EC;
-  --muted:#5B6472;
-  --muted-2:#8A94A3;
-  --signal:#C2410C;
-  --mechanism:#4338CA;
-  --efficacy:#0D9488;
-  --safety:#B45309;
-  --competitor:#9F1239;
-  --regulatory:#475569;
-  --congress:#7C3AED;
-  --unclassified:#94A3B8;
-  --rail:300px;
+  --ink:#0B1220; --ink-2:#151E2E; --paper:#F6F7F9; --card:#FFFFFF;
+  --rule:#E2E6EC; --muted:#5B6472; --muted-2:#8A94A3; --signal:#C2410C;
+  --mechanism:#4338CA; --efficacy:#0D9488; --safety:#B45309; --other:#0369A1;
+  --competitor:#9F1239; --regulatory:#475569; --congress:#7C3AED; --unclassified:#94A3B8;
+  --rail:310px;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
-body{
-  background:var(--paper);
-  color:var(--ink);
-  font-family:'IBM Plex Sans',system-ui,sans-serif;
-  font-size:15px;
-  line-height:1.5;
-  -webkit-font-smoothing:antialiased;
-}
+body{background:var(--paper);color:var(--ink);font-family:'IBM Plex Sans',system-ui,sans-serif;
+  font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
 button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
-input,select{font-family:inherit;font-size:inherit}
+input,select,textarea{font-family:inherit;font-size:inherit}
 a{color:inherit}
 
-/* ---------- layout ---------- */
 .shell{display:flex;min-height:100vh}
-.rail{
-  width:var(--rail);flex:none;background:var(--ink);color:#DCE3ED;
-  padding:26px 22px 40px;display:flex;flex-direction:column;gap:26px;
-  position:sticky;top:0;height:100vh;overflow-y:auto;
-}
+.rail{width:var(--rail);flex:none;background:var(--ink);color:#DCE3ED;padding:26px 22px 40px;
+  display:flex;flex-direction:column;gap:24px;position:sticky;top:0;height:100vh;overflow-y:auto}
 .main{flex:1;min-width:0;padding:0 0 80px}
 
-/* ---------- rail brand ---------- */
-.brand{display:flex;align-items:baseline;gap:9px}
-.brand h1{
-  font-family:'IBM Plex Sans';font-size:19px;font-weight:600;
-  letter-spacing:-.02em;color:#fff;
-}
-.brand .dot{
-  width:8px;height:8px;border-radius:50%;background:var(--signal);
-  flex:none;align-self:center;
-}
-.brand .dot.live{animation:pulse 2.4s ease-in-out infinite}
+.brand{display:flex;align-items:center;gap:9px}
+.brand h1{font-size:19px;font-weight:600;letter-spacing:-.02em;color:#fff}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--signal);flex:none}
+.dot.live{animation:pulse 2.4s ease-in-out infinite}
 @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.45;transform:scale(.8)}}
-.brand-sub{
-  font-family:'IBM Plex Mono';font-size:10.5px;letter-spacing:.09em;
-  text-transform:uppercase;color:#6B7A90;margin-top:5px;line-height:1.5;
-}
+.brand-sub{font-family:'IBM Plex Mono';font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;
+  color:#6B7A90;margin-top:5px;line-height:1.5}
 
-/* ---------- rail sections ---------- */
 .rail section{display:flex;flex-direction:column;gap:11px}
-.rail h2{
-  font-family:'IBM Plex Mono';font-size:10px;letter-spacing:.13em;
-  text-transform:uppercase;color:#6B7A90;font-weight:500;
-  padding-bottom:9px;border-bottom:1px solid #222E42;
-}
+.rail h2{font-family:'IBM Plex Mono';font-size:10px;letter-spacing:.13em;text-transform:uppercase;
+  color:#6B7A90;font-weight:500;padding-bottom:9px;border-bottom:1px solid #222E42}
 .field{display:flex;flex-direction:column;gap:5px}
 .field label{font-size:12px;color:#9AA6B8}
-.field input,.field select{
-  background:var(--ink-2);border:1px solid #2A3548;
-  color:#E6ECF4;border-radius:5px;padding:8px 10px;font-size:13px;width:100%;
-}
-.field input:focus,.field select:focus{outline:2px solid var(--signal);outline-offset:1px}
+.field input,.field select,.field textarea{background:var(--ink-2);border:1px solid #2A3548;
+  color:#E6ECF4;border-radius:5px;padding:8px 10px;font-size:13px;width:100%}
+.field textarea{resize:vertical;min-height:88px;line-height:1.6;font-family:'IBM Plex Mono';font-size:12px}
+.field input:focus,.field select:focus,.field textarea:focus{outline:2px solid var(--signal);outline-offset:1px}
 .field .hint{font-size:11px;color:#65728A;line-height:1.45}
 
-.btn{
-  background:var(--signal);color:#fff;border-radius:5px;padding:10px 14px;
-  font-size:13.5px;font-weight:600;width:100%;text-align:center;
-  transition:filter .15s;
-}
+.srcs{display:flex;flex-direction:column;gap:7px}
+.src{display:flex;align-items:flex-start;gap:9px;font-size:12.5px;color:#C3CDDC;cursor:pointer}
+.src input{margin-top:3px;accent-color:var(--signal);flex:none}
+.src span small{display:block;color:#65728A;font-size:11px;line-height:1.4;margin-top:2px}
+
+.btn{background:var(--signal);color:#fff;border-radius:5px;padding:10px 14px;font-size:13.5px;
+  font-weight:600;width:100%;text-align:center;transition:filter .15s}
 .btn:hover:not(:disabled){filter:brightness(1.12)}
 .btn:disabled{opacity:.45;cursor:not-allowed}
-.btn.ghost{
-  background:transparent;border:1px solid #2F3B50;color:#C3CDDC;font-weight:500;
-}
+.btn.ghost{background:transparent;border:1px solid #2F3B50;color:#C3CDDC;font-weight:500}
 .btn.ghost:hover:not(:disabled){background:var(--ink-2);filter:none}
 
-/* ---------- counters ---------- */
-.counts{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:#222E42;border:1px solid #222E42;border-radius:6px;overflow:hidden}
+.counts{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:#222E42;
+  border:1px solid #222E42;border-radius:6px;overflow:hidden}
 .count{background:var(--ink);padding:12px 13px}
 .count .n{font-family:'IBM Plex Mono';font-size:23px;font-weight:600;color:#fff;line-height:1}
 .count .l{font-size:10.5px;color:#6B7A90;margin-top:5px;letter-spacing:.05em;text-transform:uppercase}
 .count.hot .n{color:var(--signal)}
 
-/* ---------- status log ---------- */
-.log{
-  font-family:'IBM Plex Mono';font-size:11px;line-height:1.65;color:#7C8AA0;
-  background:var(--ink-2);border-radius:5px;padding:11px 12px;
-  max-height:150px;overflow-y:auto;white-space:pre-wrap;word-break:break-word;
-}
+.log{font-family:'IBM Plex Mono';font-size:11px;line-height:1.65;color:#7C8AA0;background:var(--ink-2);
+  border-radius:5px;padding:11px 12px;max-height:170px;overflow-y:auto;white-space:pre-wrap;word-break:break-word}
 .log:empty{display:none}
 .log .ok{color:#4ADE80}
 .log .err{color:#FB7185}
+.log .warn{color:#FBBF24}
 
-/* ---------- header / hero ---------- */
-.head{
-  padding:34px 44px 0;
-}
-.head .eyebrow{
-  font-family:'IBM Plex Mono';font-size:10.5px;letter-spacing:.13em;
-  text-transform:uppercase;color:var(--muted-2);
-}
-.head h2{
-  font-family:'Spectral',Georgia,serif;font-weight:400;font-size:31px;
-  letter-spacing:-.015em;margin-top:9px;line-height:1.25;max-width:22ch;
-}
+.head{padding:34px 44px 0}
+.head .eyebrow{font-family:'IBM Plex Mono';font-size:10.5px;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--muted-2)}
+.head h2{font-family:'Spectral',Georgia,serif;font-weight:400;font-size:31px;letter-spacing:-.015em;
+  margin-top:9px;line-height:1.25;max-width:22ch}
 .head h2 em{font-style:italic;color:var(--signal)}
 
-/* ---------- signal trace (signature) ---------- */
-.trace-wrap{margin:26px 44px 0;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:17px 0 13px}
+.trace-wrap{margin:26px 44px 0;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);
+  padding:17px 0 13px}
 .trace-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:11px;gap:14px;flex-wrap:wrap}
 .trace-title{font-family:'IBM Plex Mono';font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--muted)}
 .trace-legend{display:flex;gap:13px;flex-wrap:wrap;font-size:11px;color:var(--muted)}
 .trace-legend span{display:flex;align-items:center;gap:5px}
 .trace-legend i{width:8px;height:8px;border-radius:2px;display:block}
 .trace{display:flex;align-items:flex-end;gap:2px;height:66px}
-.trace .col{
-  flex:1;min-width:0;display:flex;flex-direction:column;justify-content:flex-end;
-  gap:1px;height:100%;position:relative;
-}
-.trace .col .seg{width:100%;border-radius:1px;transform-origin:bottom;animation:grow .5s cubic-bezier(.2,.7,.3,1) backwards}
+.trace .col{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:flex-end;gap:1px;
+  height:100%;position:relative}
+.trace .col .seg{width:100%;border-radius:1px;transform-origin:bottom;
+  animation:grow .5s cubic-bezier(.2,.7,.3,1) backwards}
 @keyframes grow{from{transform:scaleY(0)}to{transform:scaleY(1)}}
 .trace .col:hover .seg{filter:brightness(1.25)}
-.trace .col .tip{
-  position:absolute;bottom:calc(100% + 7px);left:50%;transform:translateX(-50%);
-  background:var(--ink);color:#fff;font-family:'IBM Plex Mono';font-size:10.5px;
-  padding:5px 8px;border-radius:4px;white-space:nowrap;opacity:0;pointer-events:none;
-  transition:opacity .12s;z-index:5;
-}
+.trace .col .tip{position:absolute;bottom:calc(100% + 7px);left:50%;transform:translateX(-50%);
+  background:var(--ink);color:#fff;font-family:'IBM Plex Mono';font-size:10.5px;padding:5px 8px;
+  border-radius:4px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .12s;z-index:5}
 .trace .col:hover .tip{opacity:1}
-.trace-axis{display:flex;justify-content:space-between;font-family:'IBM Plex Mono';font-size:10px;color:var(--muted-2);margin-top:7px}
+.trace-axis{display:flex;justify-content:space-between;font-family:'IBM Plex Mono';font-size:10px;
+  color:var(--muted-2);margin-top:7px}
 
-/* ---------- filters ---------- */
 .filters{display:flex;gap:7px;flex-wrap:wrap;padding:22px 44px 0;align-items:center}
-.chip{
-  border:1px solid var(--rule);background:var(--card);border-radius:100px;
-  padding:6px 13px;font-size:12.5px;color:var(--muted);display:flex;align-items:center;gap:6px;
-  transition:border-color .13s,color .13s;
-}
+.chip{border:1px solid var(--rule);background:var(--card);border-radius:100px;padding:6px 13px;
+  font-size:12.5px;color:var(--muted);display:flex;align-items:center;gap:6px;
+  transition:border-color .13s,color .13s}
 .chip:hover{border-color:var(--muted-2);color:var(--ink)}
 .chip.on{background:var(--ink);border-color:var(--ink);color:#fff}
 .chip i{width:7px;height:7px;border-radius:50%;display:block}
 .chip .c{font-family:'IBM Plex Mono';font-size:11px;opacity:.65}
-.searchbox{
-  margin-left:auto;border:1px solid var(--rule);background:var(--card);
-  border-radius:100px;padding:6px 14px;font-size:13px;width:210px;color:var(--ink);
-}
-.searchbox:focus{outline:2px solid var(--ink);outline-offset:1px}
+.sortsel{margin-left:auto;border:1px solid var(--rule);background:var(--card);border-radius:100px;
+  padding:6px 12px;font-size:12.5px;color:var(--muted)}
+.searchbox{border:1px solid var(--rule);background:var(--card);border-radius:100px;padding:6px 14px;
+  font-size:13px;width:180px;color:var(--ink)}
+.sortsel:focus,.searchbox:focus{outline:2px solid var(--ink);outline-offset:1px}
 
-/* ---------- list ---------- */
 .list{padding:20px 44px 0;display:flex;flex-direction:column;gap:11px;max-width:1120px}
-.paper{
-  background:var(--card);border:1px solid var(--rule);border-radius:8px;
-  padding:17px 19px;position:relative;transition:border-color .14s,box-shadow .14s;
-}
+.paper{background:var(--card);border:1px solid var(--rule);border-radius:8px;padding:17px 19px;
+  transition:border-color .14s,box-shadow .14s}
 .paper:hover{border-color:#C6CEDA;box-shadow:0 1px 3px rgba(11,18,32,.05)}
-.paper.fresh{border-left:3px solid var(--signal);padding-left:17px}
-.meta{
-  font-family:'IBM Plex Mono';font-size:11px;color:var(--muted-2);
-  display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-bottom:8px;
-}
-.meta .pmid{color:var(--muted)}
+.paper.fresh{border-left:3px solid var(--signal)}
+.meta{font-family:'IBM Plex Mono';font-size:11px;color:var(--muted-2);display:flex;gap:8px;
+  flex-wrap:wrap;align-items:center;margin-bottom:8px}
 .meta .sep{opacity:.4}
-.meta .new{
-  background:var(--signal);color:#fff;padding:1.5px 6px;border-radius:3px;
-  font-size:9.5px;letter-spacing:.09em;font-weight:600;
-}
-.paper h3{
-  font-family:'Spectral',Georgia,serif;font-size:17.5px;font-weight:500;
-  line-height:1.36;letter-spacing:-.005em;margin-bottom:9px;
-}
+.meta .new{background:var(--signal);color:#fff;padding:1.5px 6px;border-radius:3px;font-size:9.5px;
+  letter-spacing:.09em;font-weight:600}
+.jt{font-size:9.5px;font-weight:600;letter-spacing:.04em;padding:1px 5px;border-radius:3px;
+  border:1px solid currentColor}
+.jt.t1{color:#B45309}.jt.t2{color:#0D9488}.jt.t3{color:#64748B}.jt.t4{color:#B6BEC9}
+.sb{font-size:9.5px;letter-spacing:.04em;padding:1px 5px;border-radius:3px;background:#EDF0F4;color:var(--muted)}
+.paper h3{font-family:'Spectral',Georgia,serif;font-size:17.5px;font-weight:500;line-height:1.36;
+  letter-spacing:-.005em;margin-bottom:9px}
 .paper h3 a{text-decoration:none;background-image:linear-gradient(var(--rule),var(--rule));
-  background-size:100% 1px;background-repeat:no-repeat;background-position:0 95%;}
+  background-size:100% 1px;background-repeat:no-repeat;background-position:0 95%}
 .paper h3 a:hover{background-image:linear-gradient(var(--signal),var(--signal))}
 .summary{font-size:13.5px;color:var(--muted);line-height:1.55;margin-bottom:11px}
 .summary.none{font-style:italic;color:var(--muted-2)}
-.exl{
-  font-family:'IBM Plex Mono';font-size:9.5px;letter-spacing:.07em;
-  text-transform:uppercase;color:var(--muted-2);border:1px solid var(--rule);
-  padding:1px 5px;border-radius:3px;margin-right:2px;vertical-align:1px;
-}
+.exl{font-family:'IBM Plex Mono';font-size:9.5px;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--muted-2);border:1px solid var(--rule);padding:1px 5px;border-radius:3px;
+  margin-right:2px;vertical-align:1px}
 .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.tag{
-  font-family:'IBM Plex Mono';font-size:10.5px;letter-spacing:.05em;
-  padding:3px 9px;border-radius:3px;color:#fff;font-weight:500;
-}
-.rel{
-  font-family:'IBM Plex Mono';font-size:10.5px;color:var(--muted);
-  border:1px solid var(--rule);padding:2.5px 8px;border-radius:3px;
-}
-.expand{
-  margin-left:auto;font-size:12px;color:var(--muted);
-  border-bottom:1px solid var(--rule);
-}
+.tag{font-family:'IBM Plex Mono';font-size:10.5px;letter-spacing:.05em;padding:3px 9px;
+  border-radius:3px;color:#fff;font-weight:500}
+.rel{font-family:'IBM Plex Mono';font-size:10.5px;color:var(--muted);border:1px solid var(--rule);
+  padding:2.5px 8px;border-radius:3px}
+.expand{margin-left:auto;font-size:12px;color:var(--muted);border-bottom:1px solid var(--rule)}
 .expand:hover{color:var(--ink);border-color:var(--ink)}
-.abstract{
-  font-family:'Spectral',Georgia,serif;font-size:14.5px;line-height:1.68;
-  color:#2B3444;margin-top:14px;padding-top:14px;border-top:1px solid var(--rule);
-  white-space:pre-wrap;
-}
-.cited{
-  margin-top:12px;padding-top:12px;border-top:1px dashed var(--rule);
-  font-size:12.5px;color:var(--muted);
-}
-.cited b{font-weight:600;color:var(--ink)}
+.abstract{font-family:'Spectral',Georgia,serif;font-size:14.5px;line-height:1.68;color:#2B3444;
+  margin-top:14px;padding-top:14px;border-top:1px solid var(--rule);white-space:pre-wrap}
 
-/* ---------- empty ---------- */
-.empty{
-  padding:64px 44px;max-width:560px;
-}
+.empty{padding:64px 44px;max-width:600px}
 .empty h3{font-family:'Spectral',serif;font-size:22px;font-weight:400;margin-bottom:11px}
 .empty p{color:var(--muted);font-size:14px;line-height:1.65;margin-bottom:9px}
-.empty code{
-  font-family:'IBM Plex Mono';font-size:12.5px;background:#EDF0F4;
-  padding:1.5px 5px;border-radius:3px;
-}
+.empty code{font-family:'IBM Plex Mono';font-size:12.5px;background:#EDF0F4;padding:1.5px 5px;border-radius:3px}
 
-/* ---------- footer ---------- */
-.foot{
-  margin:44px 44px 0;padding-top:18px;border-top:1px solid var(--rule);
-  font-size:11.5px;color:var(--muted-2);line-height:1.6;max-width:760px;
-}
+.foot{margin:44px 44px 0;padding-top:18px;border-top:1px solid var(--rule);font-size:11.5px;
+  color:var(--muted-2);line-height:1.6;max-width:780px}
 
-/* ---------- toast ---------- */
-.toast{
-  position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(80px);
-  background:var(--ink);color:#fff;padding:11px 18px;border-radius:6px;
-  font-size:13px;transition:transform .25s cubic-bezier(.2,.8,.3,1);z-index:50;
-}
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(80px);
+  background:var(--ink);color:#fff;padding:11px 18px;border-radius:6px;font-size:13px;
+  transition:transform .25s cubic-bezier(.2,.8,.3,1);z-index:50}
 .toast.show{transform:translateX(-50%) translateY(0)}
 
-/* ---------- responsive ---------- */
 @media (max-width:900px){
   .shell{flex-direction:column}
   .rail{width:100%;height:auto;position:static;padding:20px 22px 26px}
-  .head,.trace-wrap,.filters,.list,.foot{padding-left:22px;padding-right:22px}
-  .trace-wrap,.foot{margin-left:0;margin-right:0}
+  .head,.filters,.list{padding-left:22px;padding-right:22px}
+  .trace-wrap,.foot{margin-left:22px;margin-right:22px}
   .head h2{font-size:25px}
-  .searchbox{margin-left:0;width:100%}
+  .sortsel,.searchbox{margin-left:0}
+  .searchbox{width:100%}
 }
-@media (prefers-reduced-motion:reduce){
-  *{animation:none!important;transition:none!important}
-}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 :focus-visible{outline:2px solid var(--signal);outline-offset:2px}
 </style>
 </head>
 <body>
 <div class="shell">
-
   <aside class="rail">
     <div>
       <div class="brand"><span class="dot" id="dot"></span><h1>IFN Radar</h1></div>
-      <div class="brand-sub">Anifrolumab &amp; type I interferon<br>Literature surveillance</div>
+      <div class="brand-sub">Anifrolumab &amp; type I interferon<br>Multi-source literature scan</div>
     </div>
 
     <section>
-      <h2>Scan PubMed</h2>
+      <h2>Search terms</h2>
       <div class="field">
-        <label for="term">Search term</label>
-        <input id="term" value="anifrolumab">
-        <div class="hint">Accepts full PubMed syntax, including field tags and boolean operators.</div>
+        <textarea id="terms">anifrolumab
+type I interferon receptor antagonist
+anti-IFNAR1
+IFNAR1 blockade</textarea>
+        <div class="hint">One term per line, combined with OR. Include class synonyms — many papers name the mechanism, not the molecule.</div>
       </div>
       <div class="field">
-        <label for="window">Window</label>
-        <select id="window">
-          <option value="7">Added in last 7 days</option>
-          <option value="30">Added in last 30 days</option>
-          <option value="90">Added in last 90 days</option>
-          <option value="365">Added in last year</option>
+        <label for="win">Window</label>
+        <select id="win">
+          <option value="7">Last 7 days</option>
+          <option value="30">Last 30 days</option>
+          <option value="90">Last 90 days</option>
+          <option value="365">Last year</option>
           <option value="all" selected>Everything ever published</option>
         </select>
       </div>
       <div class="field">
-        <label for="cap">Max records</label>
+        <label for="cap">Max per source, per term</label>
         <select id="cap">
           <option value="25">25</option>
-          <option value="50">50</option>
-          <option value="100" selected>100</option>
-          <option value="200">200</option>
+          <option value="50" selected>50</option>
+          <option value="100">100</option>
         </select>
       </div>
+    </section>
+
+    <section>
+      <h2>Sources</h2>
+      <div class="srcs">
+        <label class="src"><input type="checkbox" id="sPub" checked>
+          <span>PubMed<small>MEDLINE. Abstracts indexed. Lags publication by days to weeks.</small></span></label>
+        <label class="src"><input type="checkbox" id="sEpmc" checked>
+          <span>Europe PMC<small>Superset of PubMed, plus bioRxiv and medRxiv preprints.</small></span></label>
+        <label class="src"><input type="checkbox" id="sCross" checked>
+          <span>Crossref<small>Publisher DOI deposits — fastest, but searches metadata, not abstracts.</small></span></label>
+      </div>
+      <div class="field">
+        <label for="mail">Contact email <span style="color:#65728A">(optional)</span></label>
+        <input id="mail" type="email" placeholder="you@astrazeneca.com" autocomplete="off">
+        <div class="hint">Sent to NCBI and Crossref to identify your traffic. Both prefer it; Crossref routes identified callers to a more reliable pool.</div>
+      </div>
       <button class="btn" id="scan">Run scan</button>
-      <button class="btn ghost" id="preset">Load broad IFN query</button>
     </section>
 
     <section>
@@ -308,7 +235,7 @@ a{color:inherit}
       <div class="field">
         <label for="cite">Anchor PMID</label>
         <input id="cite" placeholder="e.g. 31933724">
-        <div class="hint">Finds papers citing this one — including those that never name the molecule. PubMed Central coverage only.</div>
+        <div class="hint">Papers citing this one, including those that never name the molecule. PubMed Central coverage only.</div>
       </div>
       <button class="btn ghost" id="runcite">Trace citations</button>
     </section>
@@ -316,7 +243,7 @@ a{color:inherit}
     <section>
       <h2>Corpus</h2>
       <div class="counts">
-        <div class="count"><div class="n" id="cTotal">0</div><div class="l">Papers</div></div>
+        <div class="count"><div class="n" id="cTotal">0</div><div class="l">Records</div></div>
         <div class="count hot"><div class="n" id="cNew">0</div><div class="l">New</div></div>
       </div>
       <button class="btn ghost" id="sortkw">Sort by keyword</button>
@@ -330,7 +257,7 @@ a{color:inherit}
       <div class="field">
         <label for="apikey">Anthropic API key</label>
         <input id="apikey" type="password" placeholder="sk-ant-…" autocomplete="off">
-        <div class="hint">Stored in this browser only. Anyone with access to this device or deployment can read it — use a key with a spend limit, and don't put one on a public URL.</div>
+        <div class="hint">Stored in this browser only. Anyone with access to this device or deployment can read it — use a key with a spend limit, never on a public URL.</div>
       </div>
       <button class="btn ghost" id="classify">Write AI summaries</button>
     </section>
@@ -358,55 +285,51 @@ a{color:inherit}
 
     <div class="empty" id="empty">
       <h3>Nothing in the corpus yet.</h3>
-      <p>Run a scan to pull records from PubMed. Start with <code>Everything ever published</code> — the literature on a single molecule is finite, and a full backfill gives you a corpus to interrogate rather than an empty inbox.</p>
-      <p>Everything is stored in this browser and accumulates across sessions. Later scans add only what's new.</p>
-      <p><b>If the scan fails:</b> this page needs real network access to reach NCBI. It won't work inside a preview pane or opened straight from disk as a <code>file://</code> URL. Serve it locally with <code>python3 -m http.server</code>, or deploy it.</p>
+      <p>Run a scan to pull from all three sources at once. Start with <code>Everything ever published</code> — the literature on a single molecule is finite, and a full backfill gives you something to interrogate rather than an empty inbox.</p>
+      <p>Records are matched across sources by DOI, then PMID, then title, so the same paper appears once with every source that carried it.</p>
+      <p><b>If the scan fails:</b> this page needs real network access. It won't work in a preview pane or opened from disk as a <code>file://</code> URL. Serve it with <code>python3 -m http.server</code>, or deploy it.</p>
     </div>
 
     <div class="foot">
       Internal current-awareness only — not a pharmacovigilance system. Report any adverse event through the standard AZ safety reporting channel.<br>
-      Summaries and category tags are AI-generated and may be wrong. Consult the primary source before citing anything here. Data via NCBI E-utilities.
+      Category tags and summaries are generated automatically and may be wrong. Consult the primary source before citing anything here. Some records describe use outside the approved licence; they are logged because tracking published science is a Medical Affairs function, not because such use is endorsed.<br>
+      Data via NCBI E-utilities, Europe PMC (EMBL-EBI) and Crossref.
     </div>
   </main>
 </div>
-
 <div class="toast" id="toast"></div>
 
 <script>
 const EUTILS='https://eutils.ncbi.nlm.nih.gov/entrez/eutils/';
+const EPMC='https://www.ebi.ac.uk/europepmc/webservices/rest/search';
+const CROSS='https://api.crossref.org/works';
 const TOOL='ifnradar';
-const KEY='ifnradar:corpus:v1';
+const KEY='ifnradar:corpus:v2';
 const AKEY='ifnradar:apikey';
+const MKEY='ifnradar:mail';
 
 const CATS={
   'IFN Mechanism':'var(--mechanism)',
   'Efficacy':'var(--efficacy)',
   'Safety':'var(--safety)',
+  'Other Indications':'var(--other)',
   'Competitor':'var(--competitor)',
   'Regulatory':'var(--regulatory)',
   'Congress':'var(--congress)',
   'Unclassified':'var(--unclassified)'
 };
 
-const BROAD='anifrolumab[All Fields] OR (("interferon type I"[MeSH Terms] OR "type I interferon"[Title/Abstract]) AND ("lupus erythematosus, systemic"[MeSH Terms] OR "systemic lupus erythematosus"[Title/Abstract]))';
-
-let corpus=[];        // {pmid,title,journal,date,abstract,category,summary,relevance,added,fresh,citedFrom}
-let activeCats=new Set();
-let query='';
-
+let corpus=[],activeCats=new Set(),query='',sortBy='date';
 const $=id=>document.getElementById(id);
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
 function log(msg,cls){
-  const el=$('log');
-  const line=document.createElement('div');
+  const el=$('log'),line=document.createElement('div');
   if(cls)line.className=cls;
-  line.textContent=msg;
-  el.appendChild(line);
-  el.scrollTop=el.scrollHeight;
+  line.textContent=msg;el.appendChild(line);el.scrollTop=el.scrollHeight;
 }
-function toast(msg){
-  const t=$('toast');t.textContent=msg;t.classList.add('show');
+function toast(m){
+  const t=$('toast');t.textContent=m;t.classList.add('show');
   clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2600);
 }
 function busy(on){
@@ -414,111 +337,62 @@ function busy(on){
   $('dot').classList.toggle('live',on);
 }
 
-/* ---------- storage ---------- */
-async function load(){
-  try{
-    const raw=localStorage.getItem(KEY);
-    if(raw)corpus=JSON.parse(raw);
-  }catch(e){corpus=[];}
-  const k=localStorage.getItem(AKEY);
-  if(k)$('apikey').value=k;
-  render();
-}
-async function save(){
-  try{
-    const slim=corpus.map(p=>({...p,abstract:(p.abstract||'').slice(0,1600)}));
-    localStorage.setItem(KEY,JSON.stringify(slim));
-  }catch(e){
-    log('Could not save corpus: '+e.message+' (storage may be full)','err');
+/* ---------- sorting ---------- */
+const MONTHS={jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12};
+function dateKey(p){
+  const d=(p.date||'').trim();
+  if(!d)return 0;
+  const nums=(d.match(/\d+/g)||[]).map(Number);
+  const y=nums.find(n=>n>1800&&n<2200)||0;
+  if(!y)return 0;
+  let m=0,day=0;
+  const mm=d.toLowerCase().match(/jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec/);
+  if(mm){m=MONTHS[mm[0]];day=nums.find(n=>n!==y&&n>=1&&n<=31)||0;}
+  else{
+    const rest=nums.filter(n=>n!==y);
+    if(rest.length&&rest[0]>=1&&rest[0]<=12)m=rest[0];
+    if(rest.length>1&&rest[1]>=1&&rest[1]<=31)day=rest[1];
   }
+  return y*10000+m*100+day;
 }
 
-/* ---------- pubmed ---------- */
-async function eut(fn,params){
-  const q=new URLSearchParams({...params,tool:TOOL});
-  const res=await fetch(EUTILS+fn+'?'+q.toString());
-  if(!res.ok)throw new Error(fn+' returned '+res.status);
-  return res;
+/* Curated tiers, not impact factors — edit to match how your team reads. */
+const JTIER={
+  'n engl j med':1,'lancet':1,'jama':1,'bmj':1,'nature':1,'science':1,'cell':1,
+  'nat med':1,'nat rev immunol':1,'nat rev rheumatol':1,'nat rev drug discov':1,'immunity':1,
+  'ann rheum dis':2,'arthritis rheumatol':2,'lancet rheumatol':2,'sci transl med':2,
+  'j clin invest':2,'ann intern med':2,'jama intern med':2,'j exp med':2,'blood':2,
+  'nat commun':2,'j allergy clin immunol':2,
+  'rheumatology (oxford)':3,'lupus sci med':3,'arthritis res ther':3,'j autoimmun':3,
+  'semin arthritis rheum':3,'j rheumatol':3,'rmd open':3,'lupus':3,'clin rheumatol':3,
+  'br j dermatol':3,'j am acad dermatol':3,'front immunol':3,'clin exp rheumatol':3,
+  'arthritis care res (hoboken)':3,'jama dermatol':3,'clin immunol':3,'j invest dermatol':3
+};
+function journalTier(p){
+  const j=(p.journal||'').toLowerCase().trim().replace(/\.$/,'');
+  if(JTIER[j])return JTIER[j];
+  let best=0,len=0;
+  for(const k in JTIER){if(j.startsWith(k)&&k.length>len){len=k.length;best=JTIER[k];}}
+  return best||4;
 }
+const REL={High:0,Medium:1,Low:2};
+const relRank=p=>REL[p.relevance]!==undefined?REL[p.relevance]:3;
+const SORTS={
+  date:(a,b)=>dateKey(b)-dateKey(a),
+  journal:(a,b)=>journalTier(a)-journalTier(b)||dateKey(b)-dateKey(a),
+  relevance:(a,b)=>relRank(a)-relRank(b)||dateKey(b)-dateKey(a)
+};
 
-async function esearch(term,windowDays,cap){
-  const p={db:'pubmed',term,retmax:String(cap),retmode:'json',sort:'date'};
-  if(windowDays!=='all'){p.datetype='edat';p.reldate=windowDays;}
-  const res=await eut('esearch.fcgi',p);
-  const j=await res.json();
-  return (j.esearchresult&&j.esearchresult.idlist)||[];
-}
-
-function textOf(node){return node?node.textContent.trim():'';}
-
-function parseArticles(xml){
-  const doc=new DOMParser().parseFromString(xml,'text/xml');
-  const out=[];
-  doc.querySelectorAll('PubmedArticle').forEach(a=>{
-    const pmid=textOf(a.querySelector('MedlineCitation > PMID'));
-    if(!pmid)return;
-    const title=textOf(a.querySelector('ArticleTitle'))||'[No title]';
-    const journal=textOf(a.querySelector('Journal > ISOAbbreviation'))
-                 ||textOf(a.querySelector('Journal > Title'))||'—';
-    let date='';
-    const ad=a.querySelector('ArticleDate');
-    const pd=a.querySelector('Journal > JournalIssue > PubDate');
-    const src=ad||pd;
-    if(src){
-      const y=textOf(src.querySelector('Year'));
-      const m=textOf(src.querySelector('Month'));
-      const d=textOf(src.querySelector('Day'));
-      const md=textOf(src.querySelector('MedlineDate'));
-      date=y?[y,m,d].filter(Boolean).join(' '):md;
-    }
-    const parts=[];
-    a.querySelectorAll('Abstract > AbstractText').forEach(t=>{
-      const lab=t.getAttribute('Label');
-      parts.push((lab?lab+': ':'')+t.textContent.trim());
-    });
-    out.push({
-      pmid,title,journal,date,
-      abstract:parts.join('\n\n'),
-      category:'Unclassified',summary:'',relevance:'',
-      added:new Date().toISOString(),fresh:true
-    });
-  });
-  return out;
-}
-
-async function efetch(pmids){
-  const all=[];
-  for(let i=0;i<pmids.length;i+=40){
-    const batch=pmids.slice(i,i+40);
-    const res=await eut('efetch.fcgi',{db:'pubmed',id:batch.join(','),retmode:'xml'});
-    all.push(...parseArticles(await res.text()));
-    log('  fetched '+all.length+'/'+pmids.length);
-    await sleep(400);
-  }
-  return all;
-}
-
-async function elinkCitedIn(pmid){
-  const res=await eut('elink.fcgi',{
-    dbfrom:'pubmed',db:'pubmed',linkname:'pubmed_pubmed_citedin',
-    id:pmid,retmode:'json'
-  });
-  const j=await res.json();
-  const sets=(j.linksets&&j.linksets[0]&&j.linksets[0].linksetdbs)||[];
-  const hit=sets.find(s=>s.linkname==='pubmed_pubmed_citedin');
-  return hit?hit.links.map(String):[];
-}
-
-/* ---------- rule-based classification (no key needed) ---------- */
+/* ---------- keyword classification ---------- */
 const RULES=[
-  ['Safety',['adverse event','adverse reaction','safety','tolerability','herpes zoster','malignanc','serious infection','discontinuation due to','pharmacovigilance','side effect'],1.3],
+  ['Other Indications',['morphea','lichen sclerosus','dermatomyositis','systemic sclerosis','scleroderma','sjogren','sjögren','myositis','sarcoidosis','off-label','alopecia areata','vitiligo','hidradenitis'],2.5],
   ['Competitor',['belimumab','telitacicept','litifilimab','deucravacitinib','baricitinib','obinutuzumab','daratumumab','ustekinumab','rituximab','voclosporin','car-t','anti-bdca2'],2.5],
   ['Regulatory',['food and drug administration','european medicines agency',' fda ','approval','marketing authorisation','marketing authorization','label update','regulatory'],2.0],
   ['Congress',['congress abstract','eular 20','acr convergence','conference abstract','poster presentation'],2.0],
+  ['Safety',['adverse event','adverse reaction','safety','tolerability','herpes zoster','malignanc','serious infection','discontinuation due to','pharmacovigilance','side effect'],1.3],
   ['IFN Mechanism',['interferon signature','interferon gene signature','ifnar','plasmacytoid','dendritic cell','signalling pathway','signaling pathway','in vitro','transcriptom','jak-stat','pathogenesis','immunopatholog','biomarker'],1.0],
   ['Efficacy',['bicla','sri-4','sri4','lldas','efficacy','response rate','remission','randomised','randomized','post hoc','open-label extension','real-world','effectiveness','clinical outcome'],1.0]
 ];
-
 function ruleClassify(p){
   const hay=((p.title||'')+' '+(p.abstract||'')).toLowerCase();
   let best='Unclassified',score=0;
@@ -528,14 +402,11 @@ function ruleClassify(p){
   });
   return best;
 }
-
 function excerpt(p){
   const a=(p.abstract||'').replace(/\s+/g,' ').trim();
   if(!a)return '';
-  const cut=a.slice(0,190);
-  return (a.length>190?cut.replace(/\s\S*$/,'')+'…':cut);
+  return a.length>190?a.slice(0,190).replace(/\s\S*$/,'')+'…':a;
 }
-
 async function ruleClassifyAll(){
   let n=0;
   corpus.forEach(p=>{
@@ -545,24 +416,249 @@ async function ruleClassifyAll(){
     if(p.category!=='Unclassified')n++;
   });
   await save();render();
-  toast(n?'Sorted '+n+' records by keyword':'Nothing to sort');
+  toast(n?'Sorted '+n+' records':'Nothing to sort');
 }
 
-/* ---------- AI classification (needs key) ---------- */
+/* ---------- storage ---------- */
+async function load(){
+  try{const raw=localStorage.getItem(KEY);if(raw)corpus=JSON.parse(raw);}catch(e){corpus=[];}
+  const k=localStorage.getItem(AKEY);if(k)$('apikey').value=k;
+  const m=localStorage.getItem(MKEY);if(m)$('mail').value=m;
+  render();
+}
+async function save(){
+  try{
+    localStorage.setItem(KEY,JSON.stringify(corpus.map(p=>({...p,abstract:(p.abstract||'').slice(0,1600)}))));
+  }catch(e){log('Could not save: '+e.message+' (storage may be full)','err');}
+}
+
+/* ---------- helpers ---------- */
+const terms=()=>$('terms').value.split('\n').map(s=>s.trim()).filter(Boolean);
+const mail=()=>$('mail').value.trim();
+const stripTags=s=>(s||'').replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim();
+
+function fingerprint(p){
+  if(p.doi)return 'doi:'+p.doi.toLowerCase();
+  if(p.pmid)return 'pmid:'+p.pmid;
+  return 'ttl:'+(p.title||'').toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,80);
+}
+function cutoffKey(win){
+  if(win==='all')return 0;
+  const d=new Date();d.setDate(d.getDate()-parseInt(win,10));
+  return d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate();
+}
+
+/* ---------- PubMed ---------- */
+async function pubmedSearch(term,win,cap){
+  const p=new URLSearchParams({db:'pubmed',term,retmax:String(cap),retmode:'json',sort:'date',tool:TOOL});
+  if(win!=='all'){p.set('datetype','edat');p.set('reldate',win);}
+  if(mail())p.set('email',mail());
+  const r=await fetch(EUTILS+'esearch.fcgi?'+p);
+  if(!r.ok)throw new Error('PubMed search '+r.status);
+  const j=await r.json();
+  return (j.esearchresult&&j.esearchresult.idlist)||[];
+}
+function parsePubmedXML(xml){
+  const doc=new DOMParser().parseFromString(xml,'text/xml'),out=[];
+  doc.querySelectorAll('PubmedArticle').forEach(a=>{
+    const t=n=>{const e=a.querySelector(n);return e?e.textContent.trim():'';};
+    const pmid=t('MedlineCitation > PMID');
+    if(!pmid)return;
+    let date='';
+    const src=a.querySelector('ArticleDate')||a.querySelector('Journal > JournalIssue > PubDate');
+    if(src){
+      const g=n=>{const e=src.querySelector(n);return e?e.textContent.trim():'';};
+      const y=g('Year');
+      date=y?[y,g('Month'),g('Day')].filter(Boolean).join(' '):g('MedlineDate');
+    }
+    let doi='';
+    a.querySelectorAll('ArticleId').forEach(i=>{
+      if(i.getAttribute('IdType')==='doi')doi=i.textContent.trim();
+    });
+    const parts=[];
+    a.querySelectorAll('Abstract > AbstractText').forEach(x=>{
+      const l=x.getAttribute('Label');parts.push((l?l+': ':'')+x.textContent.trim());
+    });
+    out.push({pmid,doi,title:t('ArticleTitle')||'[No title]',
+      journal:t('Journal > ISOAbbreviation')||t('Journal > Title')||'—',
+      date,abstract:parts.join('\n\n'),src:'PubMed'});
+  });
+  return out;
+}
+async function pubmedFetch(ids){
+  const all=[];
+  for(let i=0;i<ids.length;i+=40){
+    const p=new URLSearchParams({db:'pubmed',id:ids.slice(i,i+40).join(','),retmode:'xml',tool:TOOL});
+    if(mail())p.set('email',mail());
+    const r=await fetch(EUTILS+'efetch.fcgi?'+p);
+    if(!r.ok)throw new Error('PubMed fetch '+r.status);
+    all.push(...parsePubmedXML(await r.text()));
+    await sleep(400);
+  }
+  return all;
+}
+
+/* ---------- Europe PMC ---------- */
+async function epmcSearch(term,cap){
+  const p=new URLSearchParams({query:'"'+term+'"',format:'json',resultType:'core',pageSize:String(Math.min(cap,100))});
+  const r=await fetch(EPMC+'?'+p);
+  if(!r.ok)throw new Error('Europe PMC '+r.status);
+  const j=await r.json();
+  const res=(j.resultList&&j.resultList.result)||[];
+  return res.map(x=>({
+    pmid:x.pmid||'',doi:x.doi||'',
+    title:x.title||'[No title]',
+    journal:(x.journalInfo&&x.journalInfo.journal&&
+      (x.journalInfo.journal.medlineAbbreviation||x.journalInfo.journal.title))||
+      (x.source==='PPR'?'Preprint':'—'),
+    date:x.firstPublicationDate||String(x.pubYear||''),
+    abstract:x.abstractText?stripTags(x.abstractText):'',
+    src:x.source==='PPR'?'Preprint':'Europe PMC'
+  }));
+}
+
+/* ---------- Crossref ---------- */
+async function crossrefSearch(term,win,cap){
+  const p=new URLSearchParams({'query.bibliographic':term,rows:String(cap),sort:'created',order:'desc'});
+  if(win!=='all'){
+    const d=new Date();d.setDate(d.getDate()-parseInt(win,10));
+    p.set('filter','from-created-date:'+d.toISOString().slice(0,10));
+  }
+  if(mail())p.set('mailto',mail());
+  const r=await fetch(CROSS+'?'+p);
+  if(!r.ok)throw new Error('Crossref '+r.status);
+  const j=await r.json();
+  const items=(j.message&&j.message.items)||[];
+  return items.map(x=>{
+    const dp=(x.published&&x.published['date-parts']&&x.published['date-parts'][0])||
+             (x.created&&x.created['date-parts']&&x.created['date-parts'][0])||[];
+    return {
+      pmid:'',doi:x.DOI||'',
+      title:(x.title&&x.title[0])||'[No title]',
+      journal:(x['container-title']&&x['container-title'][0])||'—',
+      date:dp.join('-'),
+      abstract:x.abstract?stripTags(x.abstract):'',
+      src:'Crossref'
+    };
+  });
+}
+
+/* ---------- merge ---------- */
+async function merge(items){
+  const index=new Map();
+  corpus.forEach(p=>index.set(fingerprint(p),p));
+  corpus.forEach(p=>p.fresh=false);
+  let added=0,enriched=0;
+  items.forEach(it=>{
+    const fp=fingerprint(it),ex=index.get(fp);
+    if(ex){
+      if(!ex.sources.includes(it.src)){ex.sources.push(it.src);}
+      if(!ex.abstract&&it.abstract){ex.abstract=it.abstract;enriched++;}
+      if(!ex.pmid&&it.pmid)ex.pmid=it.pmid;
+      if(!ex.doi&&it.doi)ex.doi=it.doi;
+      if((!ex.journal||ex.journal==='—')&&it.journal)ex.journal=it.journal;
+      return;
+    }
+    const rec={...it,sources:[it.src],category:'Unclassified',summary:'',relevance:'',
+      added:new Date().toISOString(),fresh:true};
+    delete rec.src;
+    corpus.push(rec);index.set(fp,rec);added++;
+  });
+  await save();render();
+  return {added,enriched};
+}
+
+/* ---------- scan ---------- */
+async function runScan(){
+  const ts=terms();
+  if(!ts.length){toast('Add at least one search term');return;}
+  busy(true);$('log').innerHTML='';
+  const win=$('win').value,cap=parseInt($('cap').value,10),cut=cutoffKey(win);
+  const found=[];
+  let failures=0;
+
+  for(const term of ts){
+    log('▸ '+term);
+
+    if($('sPub').checked){
+      try{
+        const ids=await pubmedSearch(term,win,cap);
+        log('  PubMed: '+ids.length+' ids');
+        if(ids.length)found.push(...await pubmedFetch(ids));
+      }catch(e){failures++;log('  PubMed failed: '+e.message,'err');}
+    }
+    if($('sEpmc').checked){
+      try{
+        let r=await epmcSearch(term,cap);
+        if(win!=='all')r=r.filter(x=>dateKey(x)>=cut);
+        log('  Europe PMC: '+r.length+' records');
+        found.push(...r);
+      }catch(e){failures++;log('  Europe PMC failed: '+e.message,'err');}
+      await sleep(300);
+    }
+    if($('sCross').checked){
+      try{
+        const r=await crossrefSearch(term,win,cap);
+        log('  Crossref: '+r.length+' records');
+        found.push(...r);
+      }catch(e){failures++;log('  Crossref failed: '+e.message,'err');}
+      await sleep(300);
+    }
+  }
+
+  if(!found.length){
+    if(failures)log('All sources failed. If this says "Failed to fetch", the page is not running on a real host.','err');
+    else log('No records matched.','warn');
+    busy(false);toast(failures?'Scan failed — see log':'No records found');return;
+  }
+  const {added,enriched}=await merge(found);
+  log('Merged '+found.length+' results → '+added+' new, '+enriched+' enriched',(added?'ok':'warn'));
+  if(failures)log(failures+' source call(s) failed — results may be incomplete','warn');
+  busy(false);
+  toast(added?'Added '+added+' new records':'Corpus already current');
+}
+
+/* ---------- citation trail ---------- */
+async function runCite(){
+  const pmid=$('cite').value.trim().replace(/\D/g,'');
+  if(!pmid){toast('Enter a PMID');return;}
+  busy(true);$('log').innerHTML='';
+  try{
+    const p=new URLSearchParams({dbfrom:'pubmed',db:'pubmed',linkname:'pubmed_pubmed_citedin',
+      id:pmid,retmode:'json',tool:TOOL});
+    if(mail())p.set('email',mail());
+    const r=await fetch(EUTILS+'elink.fcgi?'+p);
+    if(!r.ok)throw new Error('ELink '+r.status);
+    const j=await r.json();
+    const sets=(j.linksets&&j.linksets[0]&&j.linksets[0].linksetdbs)||[];
+    const hit=sets.find(s=>s.linkname==='pubmed_pubmed_citedin');
+    const ids=hit?hit.links.map(String).slice(0,150):[];
+    log('Citing papers found: '+ids.length);
+    if(!ids.length){busy(false);toast('No citing papers in PubMed Central');return;}
+    const papers=await pubmedFetch(ids);
+    papers.forEach(p=>p.citedFrom=pmid);
+    const {added}=await merge(papers);
+    log('Added '+added,'ok');toast('Added '+added+' citing papers');
+  }catch(e){log('Trace failed: '+e.message,'err');toast('Trace failed — see log');}
+  busy(false);
+}
+
+/* ---------- AI summaries ---------- */
 async function classifyBatch(papers){
   const payload=papers.map((p,i)=>
     `[${i}]\nTitle: ${p.title}\nJournal: ${p.journal} (${p.date})\nAbstract: ${(p.abstract||'').slice(0,1100)||'[none available]'}`
   ).join('\n\n---\n\n');
+  const prompt=`You are classifying published scientific records for an internal Medical Affairs current-awareness log covering anifrolumab (Saphnelo) and type I interferon biology. Readers are Medical Affairs scientists. You are not writing promotional content and not making clinical recommendations.
 
-  const prompt=`You are classifying published scientific records for an internal Medical Affairs current-awareness log covering anifrolumab (Saphnelo) and type I interferon biology in systemic lupus erythematosus. You are not writing promotional content and not making clinical recommendations.
-
-For EACH record below, return:
-- "i": the record index
-- "category": exactly one of "IFN Mechanism", "Efficacy", "Safety", "Competitor", "Regulatory", "Congress", "Unclassified"
-- "summary": ONE sentence, max 30 words, stating only what the source itself reports. No interpretation. No product comparison. Never characterise findings as positive, promising, encouraging or superior.
+For EACH record return:
+- "i": record index
+- "category": exactly one of "IFN Mechanism", "Efficacy", "Safety", "Other Indications", "Competitor", "Regulatory", "Congress", "Unclassified"
+- "summary": ONE sentence, max 30 words, stating only what the source reports. No interpretation. No product comparison. Never characterise findings as positive, promising, encouraging or superior.
 - "relevance": "High", "Medium" or "Low" for a Saphnelo Medical Affairs reader
 
-Use "Unclassified" if the abstract is missing or too thin to judge, and leave summary empty in that case. Never state a conclusion the source does not state. Never mention off-label use.
+Use "Other Indications" for use outside systemic lupus erythematosus — morphea, lichen sclerosus, dermatomyositis, systemic sclerosis and similar. Report what these papers state factually; do not endorse, recommend or encourage use outside the approved licence, and do not editorialise about it.
+
+Use "Unclassified" if the record is too thin to judge, leaving summary empty. Never state a conclusion the source does not state.
 
 RECORDS:
 ${payload}
@@ -574,125 +670,39 @@ Return ONLY a valid JSON array, no markdown fencing and no preamble:
   if(!key)throw new Error('No API key set');
   const res=await fetch('https://api.anthropic.com/v1/messages',{
     method:'POST',
-    headers:{
-      'Content-Type':'application/json',
-      'x-api-key':key,
-      'anthropic-version':'2023-06-01',
-      'anthropic-dangerous-direct-browser-access':'true'
-    },
-    body:JSON.stringify({
-      model:'claude-sonnet-4-6',
-      max_tokens:1000,
-      messages:[{role:'user',content:prompt}]
-    })
+    headers:{'Content-Type':'application/json','x-api-key':key,
+      'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+    body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1000,messages:[{role:'user',content:prompt}]})
   });
-  if(!res.ok)throw new Error('Classifier returned '+res.status);
+  if(!res.ok)throw new Error('Classifier '+res.status);
   const data=await res.json();
   const text=data.content.filter(c=>c.type==='text').map(c=>c.text).join('');
   const clean=text.replace(/```json|```/g,'').trim();
-  const start=clean.indexOf('[');const end=clean.lastIndexOf(']');
-  return JSON.parse(clean.slice(start,end+1));
+  return JSON.parse(clean.slice(clean.indexOf('['),clean.lastIndexOf(']')+1));
 }
-
 async function classifyAll(){
-  if(!$('apikey').value.trim()){
-    toast('Add an API key first, or use Sort by keyword');return;
-  }
+  if(!$('apikey').value.trim()){toast('Add an API key, or use Sort by keyword');return;}
   const todo=corpus.filter(p=>!p.tried);
   if(!todo.length){toast('Nothing left to classify');return;}
-  busy(true);
-  log('Classifying '+todo.length+' records…');
+  busy(true);log('Writing summaries for '+todo.length+' records…');
   let done=0;
   for(let i=0;i<todo.length;i+=5){
     const batch=todo.slice(i,i+5);
     try{
-      const results=await classifyBatch(batch);
-      results.forEach(r=>{
-        const p=batch[r.i];
-        if(!p)return;
+      (await classifyBatch(batch)).forEach(r=>{
+        const p=batch[r.i];if(!p)return;
         p.category=CATS[r.category]?r.category:'Unclassified';
         if(r.summary){p.summary=r.summary;p.isExcerpt=false;}
-        p.relevance=r.relevance||'';
-        p.tried=true;
+        p.relevance=r.relevance||'';p.tried=true;
       });
-      done+=batch.length;
-      log('  '+done+'/'+todo.length,'ok');
-    }catch(e){
-      batch.forEach(p=>p.tried=true);
-      log('  batch failed: '+e.message,'err');
-    }
-    render();
-    await sleep(300);
+      done+=batch.length;log('  '+done+'/'+todo.length,'ok');
+    }catch(e){batch.forEach(p=>p.tried=true);log('  batch failed: '+e.message,'err');}
+    render();await sleep(300);
   }
-  await save();render();busy(false);
-  toast('Classified '+done+' records');
+  await save();render();busy(false);toast('Summarised '+done+' records');
 }
 
-/* ---------- merge ---------- */
-async function merge(items,note){
-  const known=new Set(corpus.map(p=>p.pmid));
-  const fresh=items.filter(p=>!known.has(p.pmid));
-  corpus.forEach(p=>p.fresh=false);
-  if(note)fresh.forEach(p=>p.citedFrom=note);
-  corpus=[...fresh,...corpus];
-  corpus.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
-  await save();
-  render();
-  return fresh.length;
-}
-
-/* ---------- actions ---------- */
-async function runScan(){
-  busy(true);$('log').innerHTML='';
-  const term=$('term').value.trim();
-  const win=$('window').value;
-  const cap=$('cap').value;
-  if(!term){toast('Enter a search term');busy(false);return;}
-  try{
-    log('Searching PubMed…');
-    const ids=await esearch(term,win,cap);
-    log('  '+ids.length+' PMIDs returned');
-    if(!ids.length){toast('No records found');busy(false);return;}
-    const known=new Set(corpus.map(p=>p.pmid));
-    const need=ids.filter(id=>!known.has(id));
-    log('  '+need.length+' not already in corpus');
-    if(!need.length){toast('Corpus already current');busy(false);return;}
-    const papers=await efetch(need);
-    const n=await merge(papers);
-    log('Added '+n+' records','ok');
-    toast('Added '+n+' new records');
-  }catch(e){
-    log('Scan failed: '+e.message,'err');
-    log('If this says "Failed to fetch", the browser blocked the request (CORS). Run the file from a local server or a deployed host rather than opening it directly from disk.','err');
-    toast('Scan failed — see log');
-  }
-  busy(false);
-}
-
-async function runCite(){
-  const pmid=$('cite').value.trim().replace(/\D/g,'');
-  if(!pmid){toast('Enter a PMID');return;}
-  busy(true);$('log').innerHTML='';
-  try{
-    log('Tracing citations of PMID '+pmid+'…');
-    const ids=await elinkCitedIn(pmid);
-    log('  '+ids.length+' citing papers found');
-    if(!ids.length){toast('No citing papers in PubMed Central');busy(false);return;}
-    const known=new Set(corpus.map(p=>p.pmid));
-    const need=ids.filter(id=>!known.has(id)).slice(0,150);
-    log('  '+need.length+' not already in corpus');
-    if(!need.length){toast('All already in corpus');busy(false);return;}
-    const papers=await efetch(need);
-    const n=await merge(papers,pmid);
-    log('Added '+n+' citing papers','ok');
-    toast('Added '+n+' citing papers');
-  }catch(e){
-    log('Citation trace failed: '+e.message,'err');
-    toast('Trace failed — see log');
-  }
-  busy(false);
-}
-
+/* ---------- output ---------- */
 function visible(){
   return corpus.filter(p=>{
     if(activeCats.size&&!activeCats.has(p.category))return false;
@@ -701,91 +711,78 @@ function visible(){
       if(!hay.includes(query))return false;
     }
     return true;
-  });
+  }).sort(SORTS[sortBy]);
 }
+const linkFor=p=>p.pmid?'https://pubmed.ncbi.nlm.nih.gov/'+p.pmid+'/':
+  (p.doi?'https://doi.org/'+p.doi:'#');
 
 function copyDigest(){
   const items=visible();
   if(!items.length){toast('Nothing to copy');return;}
-  const groups={};
-  items.forEach(p=>{(groups[p.category]=groups[p.category]||[]).push(p);});
+  const g={};items.forEach(p=>{(g[p.category]=g[p.category]||[]).push(p);});
   let out='# IFN Radar — literature digest\n_'+new Date().toDateString()+' · '+items.length+' records_\n\n';
   Object.keys(CATS).forEach(cat=>{
-    if(!groups[cat])return;
+    if(!g[cat])return;
     out+='## '+cat+'\n\n';
-    groups[cat].forEach(p=>{
-      out+='- **'+p.title+'**  \n  '+p.journal+' · '+(p.date||'n.d.')+' · PMID '+p.pmid+'  \n';
+    g[cat].forEach(p=>{
+      out+='- **'+p.title+'**  \n  '+p.journal+' · '+(p.date||'n.d.')+
+        (p.pmid?' · PMID '+p.pmid:'')+(p.doi?' · doi:'+p.doi:'')+'  \n';
       if(p.summary)out+='  '+p.summary+'  \n';
-      out+='  https://pubmed.ncbi.nlm.nih.gov/'+p.pmid+'/\n\n';
+      out+='  '+linkFor(p)+'\n\n';
     });
   });
-  out+='\n---\nInternal current-awareness only — not a pharmacovigilance system. Report any adverse event through the standard AZ safety reporting channel. Summaries are AI-generated; consult the primary source before citing.\n';
-  navigator.clipboard.writeText(out).then(()=>toast('Digest copied — paste into Teams or email'),
-    ()=>toast('Clipboard blocked by browser'));
+  out+='\n---\nInternal current-awareness only — not a pharmacovigilance system. Report any adverse event through the standard AZ safety reporting channel. Summaries are generated automatically; consult the primary source before citing. Records describing use outside the approved licence are logged for scientific awareness only.\n';
+  navigator.clipboard.writeText(out).then(()=>toast('Digest copied'),()=>toast('Clipboard blocked'));
 }
-
 function downloadCSV(){
   const items=visible();
   if(!items.length){toast('Nothing to export');return;}
   const esc=s=>'"'+String(s==null?'':s).replace(/"/g,'""')+'"';
-  const rows=[['PMID','Title','Journal','Published','Category','Relevance','Summary','Link']];
-  items.forEach(p=>rows.push([p.pmid,p.title,p.journal,p.date,p.category,p.relevance,p.summary,
-    'https://pubmed.ncbi.nlm.nih.gov/'+p.pmid+'/']));
-  const csv='\ufeff'+rows.map(r=>r.map(esc).join(',')).join('\n');
+  const rows=[['PMID','DOI','Title','Journal','Tier','Published','Category','Relevance','Summary','Sources','Link']];
+  items.forEach(p=>rows.push([p.pmid,p.doi,p.title,p.journal,'T'+journalTier(p),p.date,
+    p.category,p.relevance,p.summary,(p.sources||[]).join('; '),linkFor(p)]));
   const a=document.createElement('a');
-  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
-  a.download='ifn-radar-'+new Date().toISOString().slice(0,10)+'.csv';
-  a.click();
+  a.href=URL.createObjectURL(new Blob(['\ufeff'+rows.map(r=>r.map(esc).join(',')).join('\n')],{type:'text/csv'}));
+  a.download='ifn-radar-'+new Date().toISOString().slice(0,10)+'.csv';a.click();
   toast('CSV downloaded');
 }
 
 /* ---------- render ---------- */
 function renderTrace(){
-  const items=corpus.filter(p=>p.date&&/\d{4}/.test(p.date));
+  const items=corpus.filter(p=>dateKey(p)>0);
   const wrap=$('traceWrap');
   if(items.length<3){wrap.style.display='none';return;}
   wrap.style.display='block';
-
-  const years=items.map(p=>parseInt(p.date.match(/\d{4}/)[0],10));
-  const min=Math.min(...years),max=Math.max(...years);
-  const buckets={};
-  for(let y=min;y<=max;y++)buckets[y]={};
-  items.forEach((p,i)=>{
-    const y=years[i];
-    buckets[y][p.category]=(buckets[y][p.category]||0)+1;
-  });
-  const peak=Math.max(...Object.values(buckets).map(b=>Object.values(b).reduce((a,c)=>a+c,0)));
-
+  const yr=p=>Math.floor(dateKey(p)/10000);
+  const years=items.map(yr),min=Math.min(...years),max=Math.max(...years),b={};
+  for(let y=min;y<=max;y++)b[y]={};
+  items.forEach(p=>{const y=yr(p);b[y][p.category]=(b[y][p.category]||0)+1;});
+  const peak=Math.max(...Object.values(b).map(x=>Object.values(x).reduce((a,c)=>a+c,0)));
   const trace=$('trace');trace.innerHTML='';
-  Object.keys(buckets).forEach((y,idx)=>{
-    const b=buckets[y];
-    const total=Object.values(b).reduce((a,c)=>a+c,0);
+  Object.keys(b).forEach((y,i)=>{
     const col=document.createElement('div');col.className='col';
+    const total=Object.values(b[y]).reduce((a,c)=>a+c,0);
     Object.keys(CATS).forEach(cat=>{
-      if(!b[cat])return;
-      const seg=document.createElement('div');
-      seg.className='seg';
-      seg.style.background=CATS[cat];
-      seg.style.height=Math.max(2,(b[cat]/peak)*62)+'px';
-      seg.style.animationDelay=(idx*22)+'ms';
-      col.appendChild(seg);
+      if(!b[y][cat])return;
+      const s=document.createElement('div');s.className='seg';
+      s.style.background=CATS[cat];
+      s.style.height=Math.max(2,(b[y][cat]/peak)*62)+'px';
+      s.style.animationDelay=(i*22)+'ms';
+      col.appendChild(s);
     });
-    const tip=document.createElement('div');
-    tip.className='tip';tip.textContent=y+' · '+total+' paper'+(total===1?'':'s');
-    col.appendChild(tip);
-    trace.appendChild(col);
+    const tip=document.createElement('div');tip.className='tip';
+    tip.textContent=y+' · '+total+' record'+(total===1?'':'s');
+    col.appendChild(tip);trace.appendChild(col);
   });
   $('axL').textContent=min;$('axR').textContent=max;
-
-  const legend=$('legend');legend.innerHTML='';
+  const lg=$('legend');lg.innerHTML='';
   Object.keys(CATS).forEach(cat=>{
     if(!corpus.some(p=>p.category===cat))return;
     const s=document.createElement('span');
     s.innerHTML='<i style="background:'+CATS[cat]+'"></i>'+cat;
-    legend.appendChild(s);
+    lg.appendChild(s);
   });
 }
-
 function renderFilters(){
   const f=$('filters');
   if(!corpus.length){f.style.display='none';return;}
@@ -799,31 +796,35 @@ function renderFilters(){
     b.onclick=()=>{activeCats.has(cat)?activeCats.delete(cat):activeCats.add(cat);render();};
     f.appendChild(b);
   });
-  const s=document.createElement('input');
-  s.className='searchbox';s.placeholder='Search corpus…';s.value=query;
+  const sel=document.createElement('select');sel.className='sortsel';
+  sel.innerHTML='<option value="date">Newest first</option>'+
+    '<option value="journal">Journal tier</option><option value="relevance">Relevance</option>';
+  sel.value=sortBy;
+  sel.onchange=e=>{sortBy=e.target.value;renderList();};
+  f.appendChild(sel);
+  const s=document.createElement('input');s.className='searchbox';
+  s.placeholder='Search corpus…';s.value=query;
   s.oninput=e=>{query=e.target.value.toLowerCase();renderList();};
   f.appendChild(s);
 }
-
 function renderList(){
   const list=$('list');list.innerHTML='';
-  const items=visible();
   $('empty').style.display=corpus.length?'none':'block';
-  items.forEach(p=>{
+  visible().forEach(p=>{
     const el=document.createElement('article');
     el.className='paper'+(p.fresh?' fresh':'');
-    const link='https://pubmed.ncbi.nlm.nih.gov/'+p.pmid+'/';
+    const t=journalTier(p);
     el.innerHTML=
       '<div class="meta">'+
         (p.fresh?'<span class="new">NEW</span>':'')+
-        '<span class="pmid">PMID '+p.pmid+'</span><span class="sep">·</span>'+
-        '<span>'+p.journal+'</span><span class="sep">·</span>'+
-        '<span>'+(p.date||'n.d.')+'</span>'+
+        (p.pmid?'<span>PMID '+p.pmid+'</span><span class="sep">·</span>':'')+
+        '<span class="jt t'+t+'">T'+t+'</span><span>'+p.journal+'</span>'+
+        '<span class="sep">·</span><span>'+(p.date||'n.d.')+'</span>'+
+        (p.sources||[]).map(s=>'<span class="sb">'+s+'</span>').join('')+
         (p.citedFrom?'<span class="sep">·</span><span>cites '+p.citedFrom+'</span>':'')+
       '</div>'+
-      '<h3><a href="'+link+'" target="_blank" rel="noopener">'+p.title+'</a></h3>'+
-      (p.summary
-        ?'<div class="summary">'+(p.isExcerpt?'<span class="exl">From abstract</span> ':'')+p.summary+'</div>'
+      '<h3><a href="'+linkFor(p)+'" target="_blank" rel="noopener">'+p.title+'</a></h3>'+
+      (p.summary?'<div class="summary">'+(p.isExcerpt?'<span class="exl">From abstract</span> ':'')+p.summary+'</div>'
         :'<div class="summary none">Not yet classified.</div>')+
       '<div class="row">'+
         '<span class="tag" style="background:'+CATS[p.category]+'">'+p.category+'</span>'+
@@ -831,42 +832,36 @@ function renderList(){
         (p.abstract?'<button class="expand">Abstract</button>':'')+
       '</div>';
     const btn=el.querySelector('.expand');
-    if(btn){
-      btn.onclick=()=>{
-        const open=el.querySelector('.abstract');
-        if(open){open.remove();btn.textContent='Abstract';return;}
-        const d=document.createElement('div');
-        d.className='abstract';d.textContent=p.abstract;
-        el.appendChild(d);btn.textContent='Hide abstract';
-      };
-    }
+    if(btn)btn.onclick=()=>{
+      const open=el.querySelector('.abstract');
+      if(open){open.remove();btn.textContent='Abstract';return;}
+      const d=document.createElement('div');d.className='abstract';d.textContent=p.abstract;
+      el.appendChild(d);btn.textContent='Hide abstract';
+    };
     list.appendChild(el);
   });
 }
-
 function render(){
   $('cTotal').textContent=corpus.length;
   $('cNew').textContent=corpus.filter(p=>p.fresh).length;
   renderTrace();renderFilters();renderList();
 }
 
-/* ---------- wire up ---------- */
+/* ---------- wire ---------- */
 $('scan').onclick=runScan;
 $('runcite').onclick=runCite;
 $('sortkw').onclick=ruleClassifyAll;
 $('classify').onclick=classifyAll;
-$('apikey').onchange=e=>{
-  const v=e.target.value.trim();
-  v?localStorage.setItem(AKEY,v):localStorage.removeItem(AKEY);
-};
 $('digest').onclick=copyDigest;
 $('csv').onclick=downloadCSV;
-$('preset').onclick=()=>{$('term').value=BROAD;toast('Broad IFN query loaded');};
+$('apikey').onchange=e=>{const v=e.target.value.trim();
+  v?localStorage.setItem(AKEY,v):localStorage.removeItem(AKEY);};
+$('mail').onchange=e=>{const v=e.target.value.trim();
+  v?localStorage.setItem(MKEY,v):localStorage.removeItem(MKEY);};
 $('wipe').onclick=async()=>{
   if(!confirm('Delete all '+corpus.length+' stored records? This cannot be undone.'))return;
   corpus=[];await save();render();toast('Corpus cleared');
 };
-
 load();
 </script>
 </body>
