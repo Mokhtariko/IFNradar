@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IFN Radar — anifrolumab &amp; type I interferon literature</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Spectral:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0B1220;
+  --ink-2:#151E2E;
+  --ink-3:#1F2A3C;
+  --paper:#F6F7F9;
+  --card:#FFFFFF;
+  --rule:#E2E6EC;
+  --muted:#5B6472;
+  --muted-2:#8A94A3;
+  --signal:#C2410C;
+  --mechanism:#4338CA;
+  --efficacy:#0D9488;
+  --safety:#B45309;
+  --competitor:#9F1239;
+  --regulatory:#475569;
+  --congress:#7C3AED;
+  --unclassified:#94A3B8;
+  --rail:300px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:'IBM Plex Sans',system-ui,sans-serif;
+  font-size:15px;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input,select{font-family:inherit;font-size:inherit}
+a{color:inherit}
+
+/* ---------- layout ---------- */
+.shell{display:flex;min-height:100vh}
+.rail{
+  width:var(--rail);flex:none;background:var(--ink);color:#DCE3ED;
+  padding:26px 22px 40px;display:flex;flex-direction:column;gap:26px;
+  position:sticky;top:0;height:100vh;overflow-y:auto;
+}
+.main{flex:1;min-width:0;padding:0 0 80px}
+
+/* ---------- rail brand ---------- */
+.brand{display:flex;align-items:baseline;gap:9px}
+.brand h1{
+  font-family:'IBM Plex Sans';font-size:19px;font-weight:600;
+  letter-spacing:-.02em;color:#fff;
+}
+.brand .dot{
+  width:8px;height:8px;border-radius:50%;background:var(--signal);
+  flex:none;align-self:center;
+}
+.brand .dot.live{animation:pulse 2.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.45;transform:scale(.8)}}
+.brand-sub{
+  font-family:'IBM Plex Mono';font-size:10.5px;letter-spacing:.09em;
+  text-transform:uppercase;color:#6B7A90;margin-top:5px;line-height:1.5;
+}
+
+/* ---------- rail sections ---------- */
+.rail section{display:flex;flex-direction:column;gap:11px}
+.rail h2{
+  font-family:'IBM Plex Mono';font-size:10px;letter-spacing:.13em;
+  text-transform:uppercase;color:#6B7A90;font-weight:500;
+  padding-bottom:9px;border-bottom:1px solid #222E42;
+}
+.field{display:flex;flex-direction:column;gap:5px}
+.field label{font-size:12px;color:#9AA6B8}
+.field input,.field select{
+  background:var(--ink-2);border:1px solid #2A3548;
+  color:#E6ECF4;border-radius:5px;padding:8px 10px;font-size:13px;width:100%;
+}
+.field input:focus,.field select:focus{outline:2px solid var(--signal);outline-offset:1px}
+.field .hint{font-size:11px;color:#65728A;line-height:1.45}
+
+.btn{
+  background:var(--signal);color:#fff;border-radius:5px;padding:10px 14px;
+  font-size:13.5px;font-weight:600;width:100%;text-align:center;
+  transition:filter .15s;
+}
+.btn:hover:not(:disabled){filter:brightness(1.12)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.ghost{
+  background:transparent;border:1px solid #2F3B50;color:#C3CDDC;font-weight:500;
+}
+.btn.ghost:hover:not(:disabled){background:var(--ink-2);filter:none}
+
+/* ---------- counters ---------- */
+.counts{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:#222E42;border:1px solid #222E42;border-radius:6px;overflow:hidden}
+.count{background:var(--ink);padding:12px 13px}
+.count .n{font-family:'IBM Plex Mono';font-size:23px;font-weight:600;color:#fff;line-height:1}
+.count .l{font-size:10.5px;color:#6B7A90;margin-top:5px;letter-spacing:.05em;text-transform:uppercase}
+.count.hot .n{color:var(--signal)}
+
+/* ---------- status log ---------- */
+.log{
+  font-family:'IBM Plex Mono';font-size:11px;line-height:1.65;color:#7C8AA0;
+  background:var(--ink-2);border-radius:5px;padding:11px 12px;
+  max-height:150px;overflow-y:auto;white-space:pre-wrap;word-break:break-word;
+}
+.log:empty{display:none}
+.log .ok{color:#4ADE80}
+.log .err{color:#FB7185}
+
+/* ---------- header / hero ---------- */
+.head{
+  padding:34px 44px 0;
+}
+.head .eyebrow{
+  font-family:'IBM Plex Mono';font-size:10.5px;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--muted-2);
+}
+.head h2{
+  font-family:'Spectral',Georgia,serif;font-weight:400;font-size:31px;
+  letter-spacing:-.015em;margin-top:9px;line-height:1.25;max-width:22ch;
+}
+.head h2 em{font-style:italic;color:var(--signal)}
+
+/* ---------- signal trace (signature) ---------- */
+.trace-wrap{margin:26px 44px 0;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:17px 0 13px}
+.trace-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:11px;gap:14px;flex-wrap:wrap}
+.trace-title{font-family:'IBM Plex Mono';font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--muted)}
+.trace-legend{display:flex;gap:13px;flex-wrap:wrap;font-size:11px;color:var(--muted)}
+.trace-legend span{display:flex;align-items:center;gap:5px}
+.trace-legend i{width:8px;height:8px;border-radius:2px;display:block}
+.trace{display:flex;align-items:flex-end;gap:2px;height:66px}
+.trace .col{
+  flex:1;min-width:0;display:flex;flex-direction:column;justify-content:flex-end;
+  gap:1px;height:100%;position:relative;
+}
+.trace .col .seg{width:100%;border-radius:1px;transform-origin:bottom;animation:grow .5s cubic-bezier(.2,.7,.3,1) backwards}
+@keyframes grow{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+.trace .col:hover .seg{filter:brightness(1.25)}
+.trace .col .tip{
+  position:absolute;bottom:calc(100% + 7px);left:50%;transform:translateX(-50%);
+  background:var(--ink);color:#fff;font-family:'IBM Plex Mono';font-size:10.5px;
+  padding:5px 8px;border-radius:4px;white-space:nowrap;opacity:0;pointer-events:none;
+  transition:opacity .12s;z-index:5;
+}
+.trace .col:hover .tip{opacity:1}
+.trace-axis{display:flex;justify-content:space-between;font-family:'IBM Plex Mono';font-size:10px;color:var(--muted-2);margin-top:7px}
+
+/* ---------- filters ---------- */
+.filters{display:flex;gap:7px;flex-wrap:wrap;padding:22px 44px 0;align-items:center}
+.chip{
+  border:1px solid var(--rule);background:var(--card);border-radius:100px;
+  padding:6px 13px;font-size:12.5px;color:var(--muted);display:flex;align-items:center;gap:6px;
+  transition:border-color .13s,color .13s;
+}
+.chip:hover{border-color:var(--muted-2);color:var(--ink)}
+.chip.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.chip i{width:7px;height:7px;border-radius:50%;display:block}
+.chip .c{font-family:'IBM Plex Mono';font-size:11px;opacity:.65}
+.searchbox{
+  margin-left:auto;border:1px solid var(--rule);background:var(--card);
+  border-radius:100px;padding:6px 14px;font-size:13px;width:210px;color:var(--ink);
+}
+.searchbox:focus{outline:2px solid var(--ink);outline-offset:1px}
+
+/* ---------- list ---------- */
+.list{padding:20px 44px 0;display:flex;flex-direction:column;gap:11px;max-width:1120px}
+.paper{
+  background:var(--card);border:1px solid var(--rule);border-radius:8px;
+  padding:17px 19px;position:relative;transition:border-color .14s,box-shadow .14s;
+}
+.paper:hover{border-color:#C6CEDA;box-shadow:0 1px 3px rgba(11,18,32,.05)}
+.paper.fresh{border-left:3px solid var(--signal);padding-left:17px}
+.meta{
+  font-family:'IBM Plex Mono';font-size:11px;color:var(--muted-2);
+  display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-bottom:8px;
+}
+.meta .pmid{color:var(--muted)}
+.meta .sep{opacity:.4}
+.meta .new{
+  background:var(--signal);color:#fff;padding:1.5px 6px;border-radius:3px;
+  font-size:9.5px;letter-spacing:.09em;font-weight:600;
+}
+.paper h3{
+  font-family:'Spectral',Georgia,serif;font-size:17.5px;font-weight:500;
+  line-height:1.36;letter-spacing:-.005em;margin-bottom:9px;
+}
+.paper h3 a{text-decoration:none;background-image:linear-gradient(var(--rule),var(--rule));
+  background-size:100% 1px;background-repeat:no-repeat;background-position:0 95%;}
+.paper h3 a:hover{background-image:linear-gradient(var(--signal),var(--signal))}
+.summary{font-size:13.5px;color:var(--muted);line-height:1.55;margin-bottom:11px}
+.summary.none{font-style:italic;color:var(--muted-2)}
+.exl{
+  font-family:'IBM Plex Mono';font-size:9.5px;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--muted-2);border:1px solid var(--rule);
+  padding:1px 5px;border-radius:3px;margin-right:2px;vertical-align:1px;
+}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.tag{
+  font-family:'IBM Plex Mono';font-size:10.5px;letter-spacing:.05em;
+  padding:3px 9px;border-radius:3px;color:#fff;font-weight:500;
+}
+.rel{
+  font-family:'IBM Plex Mono';font-size:10.5px;color:var(--muted);
+  border:1px solid var(--rule);padding:2.5px 8px;border-radius:3px;
+}
+.expand{
+  margin-left:auto;font-size:12px;color:var(--muted);
+  border-bottom:1px solid var(--rule);
+}
+.expand:hover{color:var(--ink);border-color:var(--ink)}
+.abstract{
+  font-family:'Spectral',Georgia,serif;font-size:14.5px;line-height:1.68;
+  color:#2B3444;margin-top:14px;padding-top:14px;border-top:1px solid var(--rule);
+  white-space:pre-wrap;
+}
+.cited{
+  margin-top:12px;padding-top:12px;border-top:1px dashed var(--rule);
+  font-size:12.5px;color:var(--muted);
+}
+.cited b{font-weight:600;color:var(--ink)}
+
+/* ---------- empty ---------- */
+.empty{
+  padding:64px 44px;max-width:560px;
+}
+.empty h3{font-family:'Spectral',serif;font-size:22px;font-weight:400;margin-bottom:11px}
+.empty p{color:var(--muted);font-size:14px;line-height:1.65;margin-bottom:9px}
+.empty code{
+  font-family:'IBM Plex Mono';font-size:12.5px;background:#EDF0F4;
+  padding:1.5px 5px;border-radius:3px;
+}
+
+/* ---------- footer ---------- */
+.foot{
+  margin:44px 44px 0;padding-top:18px;border-top:1px solid var(--rule);
+  font-size:11.5px;color:var(--muted-2);line-height:1.6;max-width:760px;
+}
+
+/* ---------- toast ---------- */
+.toast{
+  position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(80px);
+  background:var(--ink);color:#fff;padding:11px 18px;border-radius:6px;
+  font-size:13px;transition:transform .25s cubic-bezier(.2,.8,.3,1);z-index:50;
+}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+/* ---------- responsive ---------- */
+@media (max-width:900px){
+  .shell{flex-direction:column}
+  .rail{width:100%;height:auto;position:static;padding:20px 22px 26px}
+  .head,.trace-wrap,.filters,.list,.foot{padding-left:22px;padding-right:22px}
+  .trace-wrap,.foot{margin-left:0;margin-right:0}
+  .head h2{font-size:25px}
+  .searchbox{margin-left:0;width:100%}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+}
+:focus-visible{outline:2px solid var(--signal);outline-offset:2px}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <aside class="rail">
+    <div>
+      <div class="brand"><span class="dot" id="dot"></span><h1>IFN Radar</h1></div>
+      <div class="brand-sub">Anifrolumab &amp; type I interferon<br>Literature surveillance</div>
+    </div>
+
+    <section>
+      <h2>Scan PubMed</h2>
+      <div class="field">
+        <label for="term">Search term</label>
+        <input id="term" value="anifrolumab">
+        <div class="hint">Accepts full PubMed syntax, including field tags and boolean operators.</div>
+      </div>
+      <div class="field">
+        <label for="window">Window</label>
+        <select id="window">
+          <option value="7">Added in last 7 days</option>
+          <option value="30">Added in last 30 days</option>
+          <option value="90">Added in last 90 days</option>
+          <option value="365">Added in last year</option>
+          <option value="all" selected>Everything ever published</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="cap">Max records</label>
+        <select id="cap">
+          <option value="25">25</option>
+          <option value="50">50</option>
+          <option value="100" selected>100</option>
+          <option value="200">200</option>
+        </select>
+      </div>
+      <button class="btn" id="scan">Run scan</button>
+      <button class="btn ghost" id="preset">Load broad IFN query</button>
+    </section>
+
+    <section>
+      <h2>Citation trail</h2>
+      <div class="field">
+        <label for="cite">Anchor PMID</label>
+        <input id="cite" placeholder="e.g. 31933724">
+        <div class="hint">Finds papers citing this one — including those that never name the molecule. PubMed Central coverage only.</div>
+      </div>
+      <button class="btn ghost" id="runcite">Trace citations</button>
+    </section>
+
+    <section>
+      <h2>Corpus</h2>
+      <div class="counts">
+        <div class="count"><div class="n" id="cTotal">0</div><div class="l">Papers</div></div>
+        <div class="count hot"><div class="n" id="cNew">0</div><div class="l">New</div></div>
+      </div>
+      <button class="btn ghost" id="sortkw">Sort by keyword</button>
+      <button class="btn ghost" id="digest">Copy digest</button>
+      <button class="btn ghost" id="csv">Download CSV</button>
+      <button class="btn ghost" id="wipe">Clear corpus</button>
+    </section>
+
+    <section>
+      <h2>AI summaries — optional</h2>
+      <div class="field">
+        <label for="apikey">Anthropic API key</label>
+        <input id="apikey" type="password" placeholder="sk-ant-…" autocomplete="off">
+        <div class="hint">Stored in this browser only. Anyone with access to this device or deployment can read it — use a key with a spend limit, and don't put one on a public URL.</div>
+      </div>
+      <button class="btn ghost" id="classify">Write AI summaries</button>
+    </section>
+
+    <div class="log" id="log"></div>
+  </aside>
+
+  <main class="main">
+    <div class="head">
+      <div class="eyebrow">Internal current-awareness</div>
+      <h2>The shape of the conversation around <em>anifrolumab</em>.</h2>
+    </div>
+
+    <div class="trace-wrap" id="traceWrap" style="display:none">
+      <div class="trace-head">
+        <div class="trace-title">Publication trace</div>
+        <div class="trace-legend" id="legend"></div>
+      </div>
+      <div class="trace" id="trace"></div>
+      <div class="trace-axis"><span id="axL"></span><span id="axR"></span></div>
+    </div>
+
+    <div class="filters" id="filters" style="display:none"></div>
+    <div class="list" id="list"></div>
+
+    <div class="empty" id="empty">
+      <h3>Nothing in the corpus yet.</h3>
+      <p>Run a scan to pull records from PubMed. Start with <code>Everything ever published</code> — the literature on a single molecule is finite, and a full backfill gives you a corpus to interrogate rather than an empty inbox.</p>
+      <p>Everything is stored in this browser and accumulates across sessions. Later scans add only what's new.</p>
+      <p><b>If the scan fails:</b> this page needs real network access to reach NCBI. It won't work inside a preview pane or opened straight from disk as a <code>file://</code> URL. Serve it locally with <code>python3 -m http.server</code>, or deploy it.</p>
+    </div>
+
+    <div class="foot">
+      Internal current-awareness only — not a pharmacovigilance system. Report any adverse event through the standard AZ safety reporting channel.<br>
+      Summaries and category tags are AI-generated and may be wrong. Consult the primary source before citing anything here. Data via NCBI E-utilities.
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const EUTILS='https://eutils.ncbi.nlm.nih.gov/entrez/eutils/';
+const TOOL='ifnradar';
+const KEY='ifnradar:corpus:v1';
+const AKEY='ifnradar:apikey';
+
+const CATS={
+  'IFN Mechanism':'var(--mechanism)',
+  'Efficacy':'var(--efficacy)',
+  'Safety':'var(--safety)',
+  'Competitor':'var(--competitor)',
+  'Regulatory':'var(--regulatory)',
+  'Congress':'var(--congress)',
+  'Unclassified':'var(--unclassified)'
+};
+
+const BROAD='anifrolumab[All Fields] OR (("interferon type I"[MeSH Terms] OR "type I interferon"[Title/Abstract]) AND ("lupus erythematosus, systemic"[MeSH Terms] OR "systemic lupus erythematosus"[Title/Abstract]))';
+
+let corpus=[];        // {pmid,title,journal,date,abstract,category,summary,relevance,added,fresh,citedFrom}
+let activeCats=new Set();
+let query='';
+
+const $=id=>document.getElementById(id);
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+
+function log(msg,cls){
+  const el=$('log');
+  const line=document.createElement('div');
+  if(cls)line.className=cls;
+  line.textContent=msg;
+  el.appendChild(line);
+  el.scrollTop=el.scrollHeight;
+}
+function toast(msg){
+  const t=$('toast');t.textContent=msg;t.classList.add('show');
+  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2600);
+}
+function busy(on){
+  document.querySelectorAll('.btn').forEach(b=>b.disabled=on);
+  $('dot').classList.toggle('live',on);
+}
+
+/* ---------- storage ---------- */
+async function load(){
+  try{
+    const raw=localStorage.getItem(KEY);
+    if(raw)corpus=JSON.parse(raw);
+  }catch(e){corpus=[];}
+  const k=localStorage.getItem(AKEY);
+  if(k)$('apikey').value=k;
+  render();
+}
+async function save(){
+  try{
+    const slim=corpus.map(p=>({...p,abstract:(p.abstract||'').slice(0,1600)}));
+    localStorage.setItem(KEY,JSON.stringify(slim));
+  }catch(e){
+    log('Could not save corpus: '+e.message+' (storage may be full)','err');
+  }
+}
+
+/* ---------- pubmed ---------- */
+async function eut(fn,params){
+  const q=new URLSearchParams({...params,tool:TOOL});
+  const res=await fetch(EUTILS+fn+'?'+q.toString());
+  if(!res.ok)throw new Error(fn+' returned '+res.status);
+  return res;
+}
+
+async function esearch(term,windowDays,cap){
+  const p={db:'pubmed',term,retmax:String(cap),retmode:'json',sort:'date'};
+  if(windowDays!=='all'){p.datetype='edat';p.reldate=windowDays;}
+  const res=await eut('esearch.fcgi',p);
+  const j=await res.json();
+  return (j.esearchresult&&j.esearchresult.idlist)||[];
+}
+
+function textOf(node){return node?node.textContent.trim():'';}
+
+function parseArticles(xml){
+  const doc=new DOMParser().parseFromString(xml,'text/xml');
+  const out=[];
+  doc.querySelectorAll('PubmedArticle').forEach(a=>{
+    const pmid=textOf(a.querySelector('MedlineCitation > PMID'));
+    if(!pmid)return;
+    const title=textOf(a.querySelector('ArticleTitle'))||'[No title]';
+    const journal=textOf(a.querySelector('Journal > ISOAbbreviation'))
+                 ||textOf(a.querySelector('Journal > Title'))||'—';
+    let date='';
+    const ad=a.querySelector('ArticleDate');
+    const pd=a.querySelector('Journal > JournalIssue > PubDate');
+    const src=ad||pd;
+    if(src){
+      const y=textOf(src.querySelector('Year'));
+      const m=textOf(src.querySelector('Month'));
+      const d=textOf(src.querySelector('Day'));
+      const md=textOf(src.querySelector('MedlineDate'));
+      date=y?[y,m,d].filter(Boolean).join(' '):md;
+    }
+    const parts=[];
+    a.querySelectorAll('Abstract > AbstractText').forEach(t=>{
+      const lab=t.getAttribute('Label');
+      parts.push((lab?lab+': ':'')+t.textContent.trim());
+    });
+    out.push({
+      pmid,title,journal,date,
+      abstract:parts.join('\n\n'),
+      category:'Unclassified',summary:'',relevance:'',
+      added:new Date().toISOString(),fresh:true
+    });
+  });
+  return out;
+}
+
+async function efetch(pmids){
+  const all=[];
+  for(let i=0;i<pmids.length;i+=40){
+    const batch=pmids.slice(i,i+40);
+    const res=await eut('efetch.fcgi',{db:'pubmed',id:batch.join(','),retmode:'xml'});
+    all.push(...parseArticles(await res.text()));
+    log('  fetched '+all.length+'/'+pmids.length);
+    await sleep(400);
+  }
+  return all;
+}
+
+async function elinkCitedIn(pmid){
+  const res=await eut('elink.fcgi',{
+    dbfrom:'pubmed',db:'pubmed',linkname:'pubmed_pubmed_citedin',
+    id:pmid,retmode:'json'
+  });
+  const j=await res.json();
+  const sets=(j.linksets&&j.linksets[0]&&j.linksets[0].linksetdbs)||[];
+  const hit=sets.find(s=>s.linkname==='pubmed_pubmed_citedin');
+  return hit?hit.links.map(String):[];
+}
+
+/* ---------- rule-based classification (no key needed) ---------- */
+const RULES=[
+  ['Safety',['adverse event','adverse reaction','safety','tolerability','herpes zoster','malignanc','serious infection','discontinuation due to','pharmacovigilance','side effect'],1.3],
+  ['Competitor',['belimumab','telitacicept','litifilimab','deucravacitinib','baricitinib','obinutuzumab','daratumumab','ustekinumab','rituximab','voclosporin','car-t','anti-bdca2'],2.5],
+  ['Regulatory',['food and drug administration','european medicines agency',' fda ','approval','marketing authorisation','marketing authorization','label update','regulatory'],2.0],
+  ['Congress',['congress abstract','eular 20','acr convergence','conference abstract','poster presentation'],2.0],
+  ['IFN Mechanism',['interferon signature','interferon gene signature','ifnar','plasmacytoid','dendritic cell','signalling pathway','signaling pathway','in vitro','transcriptom','jak-stat','pathogenesis','immunopatholog','biomarker'],1.0],
+  ['Efficacy',['bicla','sri-4','sri4','lldas','efficacy','response rate','remission','randomised','randomized','post hoc','open-label extension','real-world','effectiveness','clinical outcome'],1.0]
+];
+
+function ruleClassify(p){
+  const hay=((p.title||'')+' '+(p.abstract||'')).toLowerCase();
+  let best='Unclassified',score=0;
+  RULES.forEach(([cat,keys,w])=>{
+    const s=keys.reduce((a,k)=>a+(hay.includes(k)?1:0),0)*w;
+    if(s>score){score=s;best=cat;}
+  });
+  return best;
+}
+
+function excerpt(p){
+  const a=(p.abstract||'').replace(/\s+/g,' ').trim();
+  if(!a)return '';
+  const cut=a.slice(0,190);
+  return (a.length>190?cut.replace(/\s\S*$/,'')+'…':cut);
+}
+
+async function ruleClassifyAll(){
+  let n=0;
+  corpus.forEach(p=>{
+    if(p.category!=='Unclassified')return;
+    p.category=ruleClassify(p);
+    if(!p.summary){p.summary=excerpt(p);p.isExcerpt=true;}
+    if(p.category!=='Unclassified')n++;
+  });
+  await save();render();
+  toast(n?'Sorted '+n+' records by keyword':'Nothing to sort');
+}
+
+/* ---------- AI classification (needs key) ---------- */
+async function classifyBatch(papers){
+  const payload=papers.map((p,i)=>
+    `[${i}]\nTitle: ${p.title}\nJournal: ${p.journal} (${p.date})\nAbstract: ${(p.abstract||'').slice(0,1100)||'[none available]'}`
+  ).join('\n\n---\n\n');
+
+  const prompt=`You are classifying published scientific records for an internal Medical Affairs current-awareness log covering anifrolumab (Saphnelo) and type I interferon biology in systemic lupus erythematosus. You are not writing promotional content and not making clinical recommendations.
+
+For EACH record below, return:
+- "i": the record index
+- "category": exactly one of "IFN Mechanism", "Efficacy", "Safety", "Competitor", "Regulatory", "Congress", "Unclassified"
+- "summary": ONE sentence, max 30 words, stating only what the source itself reports. No interpretation. No product comparison. Never characterise findings as positive, promising, encouraging or superior.
+- "relevance": "High", "Medium" or "Low" for a Saphnelo Medical Affairs reader
+
+Use "Unclassified" if the abstract is missing or too thin to judge, and leave summary empty in that case. Never state a conclusion the source does not state. Never mention off-label use.
+
+RECORDS:
+${payload}
+
+Return ONLY a valid JSON array, no markdown fencing and no preamble:
+[{"i":0,"category":"","summary":"","relevance":""}]`;
+
+  const key=$('apikey').value.trim();
+  if(!key)throw new Error('No API key set');
+  const res=await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json',
+      'x-api-key':key,
+      'anthropic-version':'2023-06-01',
+      'anthropic-dangerous-direct-browser-access':'true'
+    },
+    body:JSON.stringify({
+      model:'claude-sonnet-4-6',
+      max_tokens:1000,
+      messages:[{role:'user',content:prompt}]
+    })
+  });
+  if(!res.ok)throw new Error('Classifier returned '+res.status);
+  const data=await res.json();
+  const text=data.content.filter(c=>c.type==='text').map(c=>c.text).join('');
+  const clean=text.replace(/```json|```/g,'').trim();
+  const start=clean.indexOf('[');const end=clean.lastIndexOf(']');
+  return JSON.parse(clean.slice(start,end+1));
+}
+
+async function classifyAll(){
+  if(!$('apikey').value.trim()){
+    toast('Add an API key first, or use Sort by keyword');return;
+  }
+  const todo=corpus.filter(p=>!p.tried);
+  if(!todo.length){toast('Nothing left to classify');return;}
+  busy(true);
+  log('Classifying '+todo.length+' records…');
+  let done=0;
+  for(let i=0;i<todo.length;i+=5){
+    const batch=todo.slice(i,i+5);
+    try{
+      const results=await classifyBatch(batch);
+      results.forEach(r=>{
+        const p=batch[r.i];
+        if(!p)return;
+        p.category=CATS[r.category]?r.category:'Unclassified';
+        if(r.summary){p.summary=r.summary;p.isExcerpt=false;}
+        p.relevance=r.relevance||'';
+        p.tried=true;
+      });
+      done+=batch.length;
+      log('  '+done+'/'+todo.length,'ok');
+    }catch(e){
+      batch.forEach(p=>p.tried=true);
+      log('  batch failed: '+e.message,'err');
+    }
+    render();
+    await sleep(300);
+  }
+  await save();render();busy(false);
+  toast('Classified '+done+' records');
+}
+
+/* ---------- merge ---------- */
+async function merge(items,note){
+  const known=new Set(corpus.map(p=>p.pmid));
+  const fresh=items.filter(p=>!known.has(p.pmid));
+  corpus.forEach(p=>p.fresh=false);
+  if(note)fresh.forEach(p=>p.citedFrom=note);
+  corpus=[...fresh,...corpus];
+  corpus.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  await save();
+  render();
+  return fresh.length;
+}
+
+/* ---------- actions ---------- */
+async function runScan(){
+  busy(true);$('log').innerHTML='';
+  const term=$('term').value.trim();
+  const win=$('window').value;
+  const cap=$('cap').value;
+  if(!term){toast('Enter a search term');busy(false);return;}
+  try{
+    log('Searching PubMed…');
+    const ids=await esearch(term,win,cap);
+    log('  '+ids.length+' PMIDs returned');
+    if(!ids.length){toast('No records found');busy(false);return;}
+    const known=new Set(corpus.map(p=>p.pmid));
+    const need=ids.filter(id=>!known.has(id));
+    log('  '+need.length+' not already in corpus');
+    if(!need.length){toast('Corpus already current');busy(false);return;}
+    const papers=await efetch(need);
+    const n=await merge(papers);
+    log('Added '+n+' records','ok');
+    toast('Added '+n+' new records');
+  }catch(e){
+    log('Scan failed: '+e.message,'err');
+    log('If this says "Failed to fetch", the browser blocked the request (CORS). Run the file from a local server or a deployed host rather than opening it directly from disk.','err');
+    toast('Scan failed — see log');
+  }
+  busy(false);
+}
+
+async function runCite(){
+  const pmid=$('cite').value.trim().replace(/\D/g,'');
+  if(!pmid){toast('Enter a PMID');return;}
+  busy(true);$('log').innerHTML='';
+  try{
+    log('Tracing citations of PMID '+pmid+'…');
+    const ids=await elinkCitedIn(pmid);
+    log('  '+ids.length+' citing papers found');
+    if(!ids.length){toast('No citing papers in PubMed Central');busy(false);return;}
+    const known=new Set(corpus.map(p=>p.pmid));
+    const need=ids.filter(id=>!known.has(id)).slice(0,150);
+    log('  '+need.length+' not already in corpus');
+    if(!need.length){toast('All already in corpus');busy(false);return;}
+    const papers=await efetch(need);
+    const n=await merge(papers,pmid);
+    log('Added '+n+' citing papers','ok');
+    toast('Added '+n+' citing papers');
+  }catch(e){
+    log('Citation trace failed: '+e.message,'err');
+    toast('Trace failed — see log');
+  }
+  busy(false);
+}
+
+function visible(){
+  return corpus.filter(p=>{
+    if(activeCats.size&&!activeCats.has(p.category))return false;
+    if(query){
+      const hay=(p.title+' '+p.journal+' '+(p.summary||'')+' '+(p.abstract||'')).toLowerCase();
+      if(!hay.includes(query))return false;
+    }
+    return true;
+  });
+}
+
+function copyDigest(){
+  const items=visible();
+  if(!items.length){toast('Nothing to copy');return;}
+  const groups={};
+  items.forEach(p=>{(groups[p.category]=groups[p.category]||[]).push(p);});
+  let out='# IFN Radar — literature digest\n_'+new Date().toDateString()+' · '+items.length+' records_\n\n';
+  Object.keys(CATS).forEach(cat=>{
+    if(!groups[cat])return;
+    out+='## '+cat+'\n\n';
+    groups[cat].forEach(p=>{
+      out+='- **'+p.title+'**  \n  '+p.journal+' · '+(p.date||'n.d.')+' · PMID '+p.pmid+'  \n';
+      if(p.summary)out+='  '+p.summary+'  \n';
+      out+='  https://pubmed.ncbi.nlm.nih.gov/'+p.pmid+'/\n\n';
+    });
+  });
+  out+='\n---\nInternal current-awareness only — not a pharmacovigilance system. Report any adverse event through the standard AZ safety reporting channel. Summaries are AI-generated; consult the primary source before citing.\n';
+  navigator.clipboard.writeText(out).then(()=>toast('Digest copied — paste into Teams or email'),
+    ()=>toast('Clipboard blocked by browser'));
+}
+
+function downloadCSV(){
+  const items=visible();
+  if(!items.length){toast('Nothing to export');return;}
+  const esc=s=>'"'+String(s==null?'':s).replace(/"/g,'""')+'"';
+  const rows=[['PMID','Title','Journal','Published','Category','Relevance','Summary','Link']];
+  items.forEach(p=>rows.push([p.pmid,p.title,p.journal,p.date,p.category,p.relevance,p.summary,
+    'https://pubmed.ncbi.nlm.nih.gov/'+p.pmid+'/']));
+  const csv='\ufeff'+rows.map(r=>r.map(esc).join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download='ifn-radar-'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();
+  toast('CSV downloaded');
+}
+
+/* ---------- render ---------- */
+function renderTrace(){
+  const items=corpus.filter(p=>p.date&&/\d{4}/.test(p.date));
+  const wrap=$('traceWrap');
+  if(items.length<3){wrap.style.display='none';return;}
+  wrap.style.display='block';
+
+  const years=items.map(p=>parseInt(p.date.match(/\d{4}/)[0],10));
+  const min=Math.min(...years),max=Math.max(...years);
+  const buckets={};
+  for(let y=min;y<=max;y++)buckets[y]={};
+  items.forEach((p,i)=>{
+    const y=years[i];
+    buckets[y][p.category]=(buckets[y][p.category]||0)+1;
+  });
+  const peak=Math.max(...Object.values(buckets).map(b=>Object.values(b).reduce((a,c)=>a+c,0)));
+
+  const trace=$('trace');trace.innerHTML='';
+  Object.keys(buckets).forEach((y,idx)=>{
+    const b=buckets[y];
+    const total=Object.values(b).reduce((a,c)=>a+c,0);
+    const col=document.createElement('div');col.className='col';
+    Object.keys(CATS).forEach(cat=>{
+      if(!b[cat])return;
+      const seg=document.createElement('div');
+      seg.className='seg';
+      seg.style.background=CATS[cat];
+      seg.style.height=Math.max(2,(b[cat]/peak)*62)+'px';
+      seg.style.animationDelay=(idx*22)+'ms';
+      col.appendChild(seg);
+    });
+    const tip=document.createElement('div');
+    tip.className='tip';tip.textContent=y+' · '+total+' paper'+(total===1?'':'s');
+    col.appendChild(tip);
+    trace.appendChild(col);
+  });
+  $('axL').textContent=min;$('axR').textContent=max;
+
+  const legend=$('legend');legend.innerHTML='';
+  Object.keys(CATS).forEach(cat=>{
+    if(!corpus.some(p=>p.category===cat))return;
+    const s=document.createElement('span');
+    s.innerHTML='<i style="background:'+CATS[cat]+'"></i>'+cat;
+    legend.appendChild(s);
+  });
+}
+
+function renderFilters(){
+  const f=$('filters');
+  if(!corpus.length){f.style.display='none';return;}
+  f.style.display='flex';f.innerHTML='';
+  Object.keys(CATS).forEach(cat=>{
+    const n=corpus.filter(p=>p.category===cat).length;
+    if(!n)return;
+    const b=document.createElement('button');
+    b.className='chip'+(activeCats.has(cat)?' on':'');
+    b.innerHTML='<i style="background:'+CATS[cat]+'"></i>'+cat+' <span class="c">'+n+'</span>';
+    b.onclick=()=>{activeCats.has(cat)?activeCats.delete(cat):activeCats.add(cat);render();};
+    f.appendChild(b);
+  });
+  const s=document.createElement('input');
+  s.className='searchbox';s.placeholder='Search corpus…';s.value=query;
+  s.oninput=e=>{query=e.target.value.toLowerCase();renderList();};
+  f.appendChild(s);
+}
+
+function renderList(){
+  const list=$('list');list.innerHTML='';
+  const items=visible();
+  $('empty').style.display=corpus.length?'none':'block';
+  items.forEach(p=>{
+    const el=document.createElement('article');
+    el.className='paper'+(p.fresh?' fresh':'');
+    const link='https://pubmed.ncbi.nlm.nih.gov/'+p.pmid+'/';
+    el.innerHTML=
+      '<div class="meta">'+
+        (p.fresh?'<span class="new">NEW</span>':'')+
+        '<span class="pmid">PMID '+p.pmid+'</span><span class="sep">·</span>'+
+        '<span>'+p.journal+'</span><span class="sep">·</span>'+
+        '<span>'+(p.date||'n.d.')+'</span>'+
+        (p.citedFrom?'<span class="sep">·</span><span>cites '+p.citedFrom+'</span>':'')+
+      '</div>'+
+      '<h3><a href="'+link+'" target="_blank" rel="noopener">'+p.title+'</a></h3>'+
+      (p.summary
+        ?'<div class="summary">'+(p.isExcerpt?'<span class="exl">From abstract</span> ':'')+p.summary+'</div>'
+        :'<div class="summary none">Not yet classified.</div>')+
+      '<div class="row">'+
+        '<span class="tag" style="background:'+CATS[p.category]+'">'+p.category+'</span>'+
+        (p.relevance?'<span class="rel">'+p.relevance+' relevance</span>':'')+
+        (p.abstract?'<button class="expand">Abstract</button>':'')+
+      '</div>';
+    const btn=el.querySelector('.expand');
+    if(btn){
+      btn.onclick=()=>{
+        const open=el.querySelector('.abstract');
+        if(open){open.remove();btn.textContent='Abstract';return;}
+        const d=document.createElement('div');
+        d.className='abstract';d.textContent=p.abstract;
+        el.appendChild(d);btn.textContent='Hide abstract';
+      };
+    }
+    list.appendChild(el);
+  });
+}
+
+function render(){
+  $('cTotal').textContent=corpus.length;
+  $('cNew').textContent=corpus.filter(p=>p.fresh).length;
+  renderTrace();renderFilters();renderList();
+}
+
+/* ---------- wire up ---------- */
+$('scan').onclick=runScan;
+$('runcite').onclick=runCite;
+$('sortkw').onclick=ruleClassifyAll;
+$('classify').onclick=classifyAll;
+$('apikey').onchange=e=>{
+  const v=e.target.value.trim();
+  v?localStorage.setItem(AKEY,v):localStorage.removeItem(AKEY);
+};
+$('digest').onclick=copyDigest;
+$('csv').onclick=downloadCSV;
+$('preset').onclick=()=>{$('term').value=BROAD;toast('Broad IFN query loaded');};
+$('wipe').onclick=async()=>{
+  if(!confirm('Delete all '+corpus.length+' stored records? This cannot be undone.'))return;
+  corpus=[];await save();render();toast('Corpus cleared');
+};
+
+load();
+</script>
+</body>
+</html>
