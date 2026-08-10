@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>IFN Radar — anifrolumab &amp; type I interferon literature</title>
+<title>Anifrolumab Radar — literature surveillance</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Spectral:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
@@ -179,18 +179,18 @@ a{color:inherit}
 <div class="shell">
   <aside class="rail">
     <div>
-      <div class="brand"><span class="dot" id="dot"></span><h1>IFN Radar</h1></div>
-      <div class="brand-sub">Anifrolumab &amp; type I interferon<br>Multi-source literature scan</div>
+      <div class="brand"><span class="dot" id="dot"></span><h1>Anifrolumab Radar</h1></div>
+      <div class="brand-sub">Anifrolumab (Saphnelo)<br>Multi-source literature scan</div>
     </div>
 
     <section>
       <h2>Search terms</h2>
       <div class="field">
         <textarea id="terms">anifrolumab
-type I interferon receptor antagonist
-anti-IFNAR1
-IFNAR1 blockade</textarea>
-        <div class="hint">One term per line, combined with OR. Include class synonyms — many papers name the mechanism, not the molecule.</div>
+Saphnelo
+MEDI-546
+type I interferon receptor antagonist</textarea>
+        <div class="hint">One term per line, combined with OR. Keep the last line — papers often name the mechanism instead of the molecule, and dropping it loses those.</div>
       </div>
       <div class="field">
         <label for="win">Window</label>
@@ -270,7 +270,6 @@ IFNAR1 blockade</textarea>
       <div class="eyebrow">Internal current-awareness</div>
       <h2>The shape of the conversation around <em>anifrolumab</em>.</h2>
     </div>
-
     <div class="trace-wrap" id="traceWrap" style="display:none">
       <div class="trace-head">
         <div class="trace-title">Publication trace</div>
@@ -648,7 +647,9 @@ async function classifyBatch(papers){
   const payload=papers.map((p,i)=>
     `[${i}]\nTitle: ${p.title}\nJournal: ${p.journal} (${p.date})\nAbstract: ${(p.abstract||'').slice(0,1100)||'[none available]'}`
   ).join('\n\n---\n\n');
-  const prompt=`You are classifying published scientific records for an internal Medical Affairs current-awareness log covering anifrolumab (Saphnelo) and type I interferon biology. Readers are Medical Affairs scientists. You are not writing promotional content and not making clinical recommendations.
+  const prompt=`You are classifying published scientific records for an internal Medical Affairs current-awareness log covering anifrolumab (Saphnelo). Readers are Medical Affairs scientists. You are not writing promotional content and not making clinical recommendations.
+
+Records reach this log because they mention anifrolumab by name, by development code (MEDI-546), or by mechanism description. Some will be false positives about type I interferon biology with no connection to the molecule — tag those "Unclassified".
 
 For EACH record return:
 - "i": record index
@@ -720,7 +721,7 @@ function copyDigest(){
   const items=visible();
   if(!items.length){toast('Nothing to copy');return;}
   const g={};items.forEach(p=>{(g[p.category]=g[p.category]||[]).push(p);});
-  let out='# IFN Radar — literature digest\n_'+new Date().toDateString()+' · '+items.length+' records_\n\n';
+  let out='# Anifrolumab Radar — literature digest\n_'+new Date().toDateString()+' · '+items.length+' records_\n\n';
   Object.keys(CATS).forEach(cat=>{
     if(!g[cat])return;
     out+='## '+cat+'\n\n';
@@ -743,7 +744,7 @@ function downloadCSV(){
     p.category,p.relevance,p.summary,(p.sources||[]).join('; '),linkFor(p)]));
   const a=document.createElement('a');
   a.href=URL.createObjectURL(new Blob(['\ufeff'+rows.map(r=>r.map(esc).join(',')).join('\n')],{type:'text/csv'}));
-  a.download='ifn-radar-'+new Date().toISOString().slice(0,10)+'.csv';a.click();
+  a.download='anifrolumab-radar-'+new Date().toISOString().slice(0,10)+'.csv';a.click();
   toast('CSV downloaded');
 }
 
