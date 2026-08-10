@@ -222,6 +222,9 @@ type I interferon receptor antagonist</textarea>
         <label class="src"><input type="checkbox" id="sCross" checked>
           <span>Crossref<small>Publisher DOI deposits — fastest, but searches metadata, not abstracts.</small></span></label>
       </div>
+      <label class="src" style="border-top:1px solid #222E42;padding-top:11px;margin-top:2px">
+        <input type="checkbox" id="strict" checked>
+        <span>Require the drug to be named<small>Keeps only records naming anifrolumab, Saphnelo or MEDI-546. Turn off to also catch papers that describe the mechanism without naming the molecule.</small></span></label>
       <div class="field">
         <label for="mail">Contact email <span style="color:#65728A">(optional)</span></label>
         <input id="mail" type="email" placeholder="you@astrazeneca.com" autocomplete="off">
@@ -464,7 +467,10 @@ function cutoffKey(win){
 
 /* ---------- PubMed ---------- */
 async function pubmedSearch(term,win,cap){
-  const p=new URLSearchParams({db:'pubmed',term,retmax:String(cap),retmode:'json',sort:'date',tool:TOOL});
+  // Unquoted phrases trigger PubMed's Automatic Term Mapping, which expands them
+  // into MeSH trees and returns thousands of loosely related records. Quoting stops that.
+  const q=/\s/.test(term)&&!/"/.test(term)?'"'+term+'"':term;
+  const p=new URLSearchParams({db:'pubmed',term:q,retmax:String(cap),retmode:'json',sort:'date',tool:TOOL});
   if(win!=='all'){p.set('datetype','edat');p.set('reldate',win);}
   if(mail())p.set('email',mail());
   const r=await fetch(EUTILS+'esearch.fcgi?'+p);
@@ -514,7 +520,8 @@ async function pubmedFetch(ids){
 
 /* ---------- Europe PMC ---------- */
 async function epmcSearch(term,cap){
-  const p=new URLSearchParams({query:'"'+term+'"',format:'json',resultType:'core',pageSize:String(Math.min(cap,100))});
+  const p=new URLSearchParams({query:'"'+term+'"',format:'json',resultType:'core',
+    synonym:'false',pageSize:String(Math.min(cap,100))});
   const r=await fetch(EPMC+'?'+p);
   if(!r.ok)throw new Error('Europe PMC '+r.status);
   const j=await r.json();
@@ -532,8 +539,11 @@ async function epmcSearch(term,cap){
 }
 
 /* ---------- relevance gate ----------
-   Crossref returns a full page of results whatever you ask it, padding with
-   progressively worse matches. It has no relevance floor, so we impose one. */
+   Every source over-returns for different reasons: Crossref pads pages to the
+   requested row count, Europe PMC expands MeSH synonyms, PubMed applies Automatic
+   Term Mapping. The query parameters above suppress most of it; this is the floor. */
+const DRUG=/\b(anifrolumab|saphnelo|medi[\s-]?546)\b/i;
+
 const STOP=new Set(['the','of','a','an','and','or','for','in','on','with','to','by','from']);
 function tokenise(s){
   return (s||'').toLowerCase()
@@ -543,7 +553,11 @@ function tokenise(s){
     .filter(t=>!STOP.has(t));
 }
 function onTopic(rec,termList){
-  const hay=new Set(tokenise((rec.title||'')+' '+(rec.abstract||'')+' '+(rec.journal||'')));
+  const text=(rec.title||'')+' '+(rec.abstract||'');
+  // Strict: the molecule must actually be named somewhere in the record.
+  if($('strict').checked)return DRUG.test(text);
+  // Loose: allow mechanism-named papers via token overlap with any search term.
+  const hay=new Set(tokenise(text+' '+(rec.journal||'')));
   return termList.some(term=>{
     const tt=tokenise(term);
     if(!tt.length)return false;
@@ -617,16 +631,21 @@ async function runScan(){
     if($('sPub').checked){
       try{
         const ids=await pubmedSearch(term,win,cap);
-        log('  PubMed: '+ids.length+' ids');
-        if(ids.length)found.push(...await pubmedFetch(ids));
+        if(ids.length){
+          const raw=await pubmedFetch(ids);
+          const kept=raw.filter(x=>onTopic(x,ts));
+          log('  PubMed: '+kept.length+' kept'+(raw.length-kept.length?', '+(raw.length-kept.length)+' filtered':''));
+          found.push(...kept);
+        }else log('  PubMed: 0');
       }catch(e){failures++;log('  PubMed failed: '+e.message,'err');}
     }
     if($('sEpmc').checked){
       try{
         let r=await epmcSearch(term,cap);
         if(win!=='all')r=r.filter(x=>dateKey(x)>=cut);
-        log('  Europe PMC: '+r.length+' records');
-        found.push(...r);
+        const kept=r.filter(x=>onTopic(x,ts));
+        log('  Europe PMC: '+kept.length+' kept'+(r.length-kept.length?', '+(r.length-kept.length)+' filtered':''));
+        found.push(...kept);
       }catch(e){failures++;log('  Europe PMC failed: '+e.message,'err');}
       await sleep(300);
     }
@@ -634,8 +653,7 @@ async function runScan(){
       try{
         const raw=await crossrefSearch(term,win,cap);
         const kept=raw.filter(x=>onTopic(x,ts));
-        const dropped=raw.length-kept.length;
-        log('  Crossref: '+kept.length+' kept'+(dropped?', '+dropped+' off-topic discarded':''));
+        log('  Crossref: '+kept.length+' kept'+(raw.length-kept.length?', '+(raw.length-kept.length)+' filtered':''));
         found.push(...kept);
       }catch(e){failures++;log('  Crossref failed: '+e.message,'err');}
       await sleep(300);
