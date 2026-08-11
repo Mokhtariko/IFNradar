@@ -188,7 +188,6 @@ a{color:inherit}
       <div class="field">
         <textarea id="terms">anifrolumab
 Saphnelo
-MEDI-546
 type I interferon receptor antagonist</textarea>
         <div class="hint">One term per line, combined with OR. Keep the last line — papers often name the mechanism instead of the molecule, and dropping it loses those.</div>
       </div>
@@ -224,7 +223,7 @@ type I interferon receptor antagonist</textarea>
       </div>
       <label class="src" style="border-top:1px solid #222E42;padding-top:11px;margin-top:2px">
         <input type="checkbox" id="strict" checked>
-        <span>Require the drug to be named<small>Keeps only records naming anifrolumab, Saphnelo or MEDI-546. Turn off to also catch papers that describe the mechanism without naming the molecule.</small></span></label>
+        <span>Require the drug to be named<small>Keeps only records naming anifrolumab or Saphnelo. Turn off to also catch papers that describe the mechanism without naming the molecule.</small></span></label>
       <div class="field">
         <label for="mail">Contact email <span style="color:#65728A">(optional)</span></label>
         <input id="mail" type="email" placeholder="you@astrazeneca.com" autocomplete="off">
@@ -542,7 +541,7 @@ async function epmcSearch(term,cap){
    Every source over-returns for different reasons: Crossref pads pages to the
    requested row count, Europe PMC expands MeSH synonyms, PubMed applies Automatic
    Term Mapping. The query parameters above suppress most of it; this is the floor. */
-const DRUG=/\b(anifrolumab|saphnelo|medi[\s-]?546)\b/i;
+const DRUG=/\b(anifrolumab|saphnelo)\b/i;
 
 const STOP=new Set(['the','of','a','an','and','or','for','in','on','with','to','by','from']);
 function tokenise(s){
@@ -704,7 +703,7 @@ async function classifyBatch(papers){
   ).join('\n\n---\n\n');
   const prompt=`You are classifying published scientific records for an internal Medical Affairs current-awareness log covering anifrolumab (Saphnelo). Readers are Medical Affairs scientists. You are not writing promotional content and not making clinical recommendations.
 
-Records reach this log because they mention anifrolumab by name, by development code (MEDI-546), or by mechanism description. Some will be false positives about type I interferon biology with no connection to the molecule — tag those "Unclassified".
+Records reach this log because they mention anifrolumab or Saphnelo by name, or describe the mechanism. Some will be false positives about type I interferon biology with no connection to the molecule — tag those "Unclassified".
 
 For EACH record return:
 - "i": record index
