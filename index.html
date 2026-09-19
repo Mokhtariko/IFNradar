@@ -332,6 +332,7 @@ Saphnelo</textarea>
       </div>
       <button class="btn ghost" id="detect">Detect models</button>
       <button class="btn ghost" id="classify">Write AI summaries</button>
+      <button class="btn ghost" id="redo">Redo all summaries</button>
     </section>
 
     <div class="log" id="log"></div>
@@ -640,7 +641,21 @@ async function epmcSearch(term,cap){
    Term Mapping. The query parameters above suppress most of it; this is the floor. */
 const DRUG=/\b(anifrolumab|saphnelo)\b/i;
 
-const STOP=new Set(['the','of','a','an','and','or','for','in','on','with','to','by','from']);
+/* Generic words that carry no topic signal. Without these, a question like
+   "what is published on haematological manifestations" turns "manifestations"
+   and "published" into search terms, and every paper saying "cutaneous
+   manifestations" matches a haematology query. */
+const STOP=new Set([
+ 'the','of','a','an','and','or','for','in','on','with','to','by','from','at','as','is','are','was','were',
+ 'what','which','who','when','where','how','why','any','all','some','there','their','this','that','these','those',
+ 'published','publication','paper','papers','article','articles','literature','evidence','data','report','reports',
+ 'study','studies','trial','trials','analysis','review','reviews','findings','finding','result','results',
+ 'patient','patients','subject','subjects','cohort','case','cases','series',
+ 'manifestation','manifestations','involvement','feature','features','outcome','outcomes','effect','effects',
+ 'treatment','therapy','clinical','disease','condition','associated','association','related','relating',
+ 'show','shows','shown','known','about','regarding','concerning','anything','something',
+ 'anifrolumab','saphnelo','lupus','sle','erythematosus','systemic'
+]);
 function tokenise(s){
   return (s||'').toLowerCase()
     .replace(/[^a-z0-9\s-]/g,' ')
@@ -1034,17 +1049,47 @@ function addTopic(){
 
 function expandQuery(q){
   const lower=q.toLowerCase();
-  const out=new Set();
+  const domainTerms=new Set();
   const matched=[];
   DOMAINS.forEach(d=>{
-    if(d.trigger.some(t=>lower.includes(t))){
+    if((d.trigger||[]).some(t=>lower.includes(t))){
       matched.push(d.name);
-      d.expand.forEach(e=>out.add(e));
+      (d.expand||[]).forEach(e=>domainTerms.add(e));
     }
   });
-  // Always include the question's own significant words.
-  tokenise(q).filter(w=>w.length>3).forEach(w=>out.add(w));
-  return {terms:[...out],domains:matched};
+  // The question's own words, minus anything generic. These refine ranking but
+  // must not qualify a paper on their own when a topic has matched.
+  const freeTerms=tokenise(q).filter(w=>w.length>3&&!domainTerms.has(w));
+  return {domainTerms:[...domainTerms],freeTerms,domains:matched};
+}
+
+function retrieve(q,limit){
+  const {domainTerms,freeTerms,domains}=expandQuery(q);
+  const strictDomain=domains.length>0;
+  const pool=corpus.filter(p=>onTopic(p,terms()));
+
+  const scored=pool.map(p=>{
+    const title=(p.title||'').toLowerCase();
+    const body=((p.abstract||'')+' '+(p.summary||'')).toLowerCase();
+    let domainScore=0,freeScore=0;
+    domainTerms.forEach(t=>{
+      const re=termRe(t);
+      if(re.test(title))domainScore+=3;
+      else if(re.test(body))domainScore+=1;
+    });
+    freeTerms.forEach(t=>{
+      const re=termRe(t);
+      if(re.test(title))freeScore+=0.5;
+      else if(re.test(body))freeScore+=0.25;
+    });
+    return {p,domainScore,score:domainScore+freeScore};
+  }).filter(x=>
+    // When the question named a topic, the paper must actually match that topic.
+    // Otherwise a shared generic word is enough to drag in an unrelated paper.
+    strictDomain?x.domainScore>0:x.score>0
+  ).sort((a,b)=>b.score-a.score||dateKey(b.p)-dateKey(a.p));
+
+  return {hits:scored.slice(0,limit||12).map(x=>x.p),total:scored.length,domains};
 }
 
 let _reCache={};
@@ -1058,24 +1103,6 @@ function termRe(t){
     _reCache[t]=new RegExp('\\b'+esc+open,'i');
   }
   return _reCache[t];
-}
-
-function retrieve(q,limit){
-  const {terms:ex,domains}=expandQuery(q);
-  const pool=corpus.filter(p=>onTopic(p,terms()));
-  const scored=pool.map(p=>{
-    const title=(p.title||'').toLowerCase();
-    const body=((p.abstract||'')+' '+(p.summary||'')).toLowerCase();
-    let score=0;
-    ex.forEach(t=>{
-      const re=termRe(t);
-      // Title hits weigh more than buried abstract mentions.
-      if(re.test(title))score+=3;
-      else if(re.test(body))score+=1;
-    });
-    return {p,score};
-  }).filter(x=>x.score>0).sort((a,b)=>b.score-a.score||dateKey(b.p)-dateKey(a.p));
-  return {hits:scored.slice(0,limit||12).map(x=>x.p),total:scored.length,domains};
 }
 
 /* ---------- ask ---------- */
@@ -1153,12 +1180,15 @@ ${payload}`;
   busy(false);
 }
 
-async function classifyAll(){
+async function classifyAll(force){
   if(!$('apikey').value.trim()){toast('Add your Gemini key, or use Sort by keyword');return;}
-  const todo=corpus.filter(p=>!p.tried);
-  if(!todo.length){toast('Nothing left to classify');return;}
+  const todo=force?corpus.slice():corpus.filter(p=>!p.tried);
+  if(!todo.length){
+    toast('All records already summarised — use Redo all to rewrite them');
+    return;
+  }
   busy(true);log('Writing summaries for '+todo.length+' records…');
-  let done=0;
+  let done=0,failed=0;
   for(let i=0;i<todo.length;i+=5){
     const batch=todo.slice(i,i+5);
     try{
@@ -1169,10 +1199,18 @@ async function classifyAll(){
         p.relevance=r.relevance||'';p.tried=true;
       });
       done+=batch.length;log('  '+done+'/'+todo.length,'ok');
-    }catch(e){batch.forEach(p=>p.tried=true);log('  batch failed: '+e.message,'err');}
+    }catch(e){
+      // Do NOT mark these as tried — a failed batch must stay retryable,
+      // otherwise one bad key locks the whole corpus out permanently.
+      failed+=batch.length;
+      log('  batch failed: '+e.message,'err');
+      if(/Rate limit/i.test(e.message)){log('  pausing 60s…','warn');await sleep(60000);}
+    }
     render();await sleep(300);
   }
-  await save();render();busy(false);toast('Summarised '+done+' records');
+  await save();render();busy(false);
+  if(failed)log(failed+' record(s) failed — press again to retry them','warn');
+  toast(done?'Summarised '+done+(failed?', '+failed+' failed':''):'All '+failed+' failed — check key and model');
 }
 
 /* ---------- output ---------- */
@@ -1369,7 +1407,11 @@ $('sortkw').onclick=ruleClassifyAll;
 $('strict').onchange=render;
 $('terms').onchange=render;
 $('purge').onclick=purgeOffTopic;
-$('classify').onclick=classifyAll;
+$('classify').onclick=()=>classifyAll(false);
+$('redo').onclick=()=>{
+  if(!confirm('Rewrite summaries for all '+corpus.length+' records? This re-runs the API on every one.'))return;
+  classifyAll(true);
+};
 $('digest').onclick=copyDigest;
 $('csv').onclick=downloadCSV;
 $('apikey').onchange=e=>{const v=e.target.value.trim();
