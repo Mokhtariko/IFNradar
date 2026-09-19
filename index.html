@@ -92,6 +92,11 @@ h1{font-size:21px;font-weight:600;letter-spacing:-.02em}
   padding:2px 8px;border-radius:100px}
 .msrc.deep{color:#047857;border-color:#A7F3D0;background:#ECFDF5;font-weight:500}
 .mbranches{padding-left:17px;border-left:2px solid var(--line);margin-left:15px;padding-top:8px}
+.moutcome{margin:11px 0 3px;padding:11px 13px;background:#FFF7ED;border:1px solid #FED7AA;
+  border-radius:8px;font-family:'Spectral',Georgia,serif;font-size:14.5px;line-height:1.55;
+  color:#7C2D12}
+.moutcome .ol{display:block;font-family:'IBM Plex Sans';font-size:9.5px;font-weight:600;
+  letter-spacing:.11em;text-transform:uppercase;color:#C2410C;margin-bottom:4px}
 .mb{position:relative;padding-left:15px;margin-bottom:13px}
 .mb:last-child{margin-bottom:0}
 .mb::before{content:'';position:absolute;left:-19px;top:11px;width:17px;height:2px;
@@ -105,6 +110,8 @@ h1{font-size:21px;font-weight:600;letter-spacing:-.02em}
 .mb li::before{content:'';position:absolute;left:0;top:9px;width:5px;height:5px;
   border-radius:50%;background:var(--line)}
 .mnote{font-size:10.5px;color:var(--faint);margin-top:13px;line-height:1.5}
+.perr{margin-top:11px;padding:9px 11px;background:#FEF2F2;border:1px solid #FECACA;
+  border-radius:6px;font-size:12.5px;color:#B91C1C;line-height:1.5}
 
 .empty{text-align:center;padding:52px 20px;color:var(--muted);font-size:14px;line-height:1.7}
 .empty b{display:block;color:var(--ink);font-size:16px;margin-bottom:7px;font-weight:600}
@@ -383,20 +390,31 @@ async function search(){
 }
 
 /* ---------- AI summary, one paper at a time ---------- */
+const BAD='radar:badmodels';
+const badList=()=>{try{return JSON.parse(localStorage.getItem(BAD)||'[]');}catch(e){return [];}};
+function markBad(m){
+  const b=badList();
+  if(m&&!b.includes(m)){b.push(m);localStorage.setItem(BAD,JSON.stringify(b));}
+}
+
 async function pickModel(key){
   const saved=localStorage.getItem(MOD);
   if(saved)return saved;
+  const bad=badList();
   const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models?key='+
     encodeURIComponent(key)+'&pageSize=200');
   if(!r.ok)throw new Error(r.status===400||r.status===403?'Key rejected by Google':'Model lookup failed');
   const names=((await r.json()).models||[])
     .filter(m=>(m.supportedGenerationMethods||[]).includes('generateContent'))
     .map(m=>(m.name||'').replace(/^models\//,''))
-    .filter(n=>n&&!/embedding|aqa|imagen|veo|tts|audio|image-generation/i.test(n));
+    .filter(n=>n&&!/embedding|aqa|imagen|veo|tts|audio|image-generation/i.test(n))
+    .filter(n=>!bad.includes(n));   // skip anything that already failed
   const best=names.find(n=>/^gemini-[\d.]+-flash$/.test(n))
     ||names.find(n=>/flash/i.test(n)&&!/preview|exp|lite/i.test(n))
     ||names.find(n=>/flash/i.test(n))||names[0];
-  if(!best)throw new Error('No usable model for this key');
+  if(!best)throw new Error(bad.length
+    ?'Every model failed for this key — check it in Settings'
+    :'No usable model for this key');
   localStorage.setItem(MOD,best);
   return best;
 }
@@ -445,6 +463,8 @@ async function summarise(i,btn){
   const key=$('key').value.trim();
   if(!key){status('Add your Gemini API key in Settings first',true);$('settings').style.display='block';return;}
   const p=papers[i];
+  const card0=btn.closest('.paper');
+  if(card0){const oe=card0.querySelector('.perr'); if(oe)oe.remove();}
   btn.disabled=true; btn.textContent='Reading…';
   try{
     const model=await pickModel(key);
@@ -471,8 +491,11 @@ RULES
 
 Return ONLY valid JSON, no markdown fencing, no preamble:
 {"centre":"4-7 word core subject",
+ "outcome":"one sentence — what actually happened or what the paper found",
  "thin":${deep?'false':(p.abstract?'false':'true')},
  "branches":[{"label":"2-3 words","points":["short phrase","short phrase"]}]}
+
+"outcome" is the bottom line a reader needs in one glance. State the result plainly and neutrally, with the key number or measure if the paper gives one. If the paper reports no clear result, or is a review or commentary rather than a study, say that instead. Never call a result positive, promising, encouraging or superior.
 
 Give ${deep?'4 to 6':'3 to 5'} branches, each with ${deep?'2 to 4':'1 to 3'} points. Keep every point under ${deep?'18':'14'} words.
 Choose branch labels that fit this record — for example Design, Population, Findings, Safety, Limitations.
@@ -481,30 +504,73 @@ TITLE: ${p.title}
 JOURNAL: ${p.journal} (${p.date||'no date'})
 ${deep?'FULL TEXT':'ABSTRACT'}: ${body||'[not available]'}`;
 
-    const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+
+    const cfg={
+      temperature:0.1,
+      maxOutputTokens:deep?4000:2500,
+      responseMimeType:'application/json'
+    };
+    const call=body2=>fetch('https://generativelanguage.googleapis.com/v1beta/models/'+
       model+':generateContent?key='+encodeURIComponent(key),{
       method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({contents:[{parts:[{text:prompt}]}],
-        generationConfig:{temperature:0.1,maxOutputTokens:deep?1100:700}})});
-    if(!r.ok){
-      if(r.status===404){localStorage.removeItem(MOD);throw new Error('Model changed — press again');}
-      if(r.status===429)throw new Error('Rate limit — wait a minute');
-      if(r.status===400||r.status===403)throw new Error('Key rejected — check it in Settings');
-      throw new Error('Gemini error '+r.status);
+      body:JSON.stringify(body2)});
+
+    // Gemini 2.5 thinks by default and those tokens come out of maxOutputTokens,
+    // which can leave nothing for the actual answer. Turn thinking off where supported.
+    let r=await call({contents:[{parts:[{text:prompt}]}],
+      generationConfig:{...cfg,thinkingConfig:{thinkingBudget:0}}});
+    if(r.status===400){
+      // Older models reject thinkingConfig — retry without it.
+      r=await call({contents:[{parts:[{text:prompt}]}],generationConfig:cfg});
     }
-    const c=((await r.json()).candidates||[])[0];
-    if(!c||c.finishReason==='SAFETY')throw new Error('No summary returned');
+    if(r.status===404){
+      // This model name does not work — blacklist it and try the next one, once.
+      markBad(model); localStorage.removeItem(MOD);
+      const alt=await pickModel(key);
+      if(alt&&alt!==model){
+        r=await call({contents:[{parts:[{text:prompt}]}],
+          generationConfig:{...cfg,thinkingConfig:{thinkingBudget:0}}});
+        if(r.status===400)r=await call({contents:[{parts:[{text:prompt}]}],generationConfig:cfg});
+      }
+    }
+    if(!r.ok){
+      let d='';try{d=((await r.json()).error||{}).message||'';}catch(_){}
+      if(r.status===404){markBad(localStorage.getItem(MOD));localStorage.removeItem(MOD);
+        throw new Error('No working model found yet — press again to try the next one');}
+      if(r.status===429)throw new Error('Rate limit reached — wait a minute, then press again');
+      if(r.status===400||r.status===403)throw new Error('Key rejected — check it in Settings'+(d?' ('+d.slice(0,60)+')':''));
+      throw new Error('Gemini error '+r.status+(d?': '+d.slice(0,60):''));
+    }
+    const j=await r.json();
+    const c=(j.candidates||[])[0];
+    if(!c)throw new Error(((j.promptFeedback||{}).blockReason)
+      ? 'Blocked by Gemini safety filter' : 'Gemini returned nothing');
+    if(c.finishReason==='SAFETY')throw new Error('Blocked by Gemini safety filter');
     const raw=((c.content||{}).parts||[]).map(x=>x.text||'').join('').trim();
+    if(!raw)throw new Error(c.finishReason==='MAX_TOKENS'
+      ? 'Ran out of output room — try again' : 'Gemini returned an empty answer');
     const clean=raw.replace(/```json|```/g,'').trim();
     const s=clean.indexOf('{'), e=clean.lastIndexOf('}');
-    if(s<0||e<0)throw new Error('Could not read the response');
-    const map=JSON.parse(clean.slice(s,e+1));
-    if(!map.branches||!map.branches.length)throw new Error('Empty map returned');
+    if(s<0||e<0)throw new Error('Response was not readable JSON');
+    let map;
+    try{map=JSON.parse(clean.slice(s,e+1));}
+    catch(_){throw new Error('Response was cut off — try again');}
+    if(!map.branches||!map.branches.length)throw new Error('No map content returned');
     map.deep=deep;
     p.map=map;
     save(); render();
   }catch(e){
     btn.disabled=false; btn.textContent=(p.oa&&p.pmcid)?'Map full text':'Map abstract';
+    // Show it on the card — an error at the top of the page is invisible
+    // when you are twenty papers down the list.
+    const card=btn.closest('.paper');
+    if(card){
+      const old=card.querySelector('.perr');
+      if(old)old.remove();
+      const d=document.createElement('div');
+      d.className='perr';
+      d.textContent=e.message;
+      card.appendChild(d);
+    }
     status(e.message,true);
   }
 }
@@ -522,6 +588,7 @@ function mapHTML(m){
     '<div class="mhead"><span class="mroot">'+esc(m.centre||'Summary')+'</span>'+
       (m.deep?'<span class="msrc deep">from full text</span>'
              :'<span class="msrc">from abstract</span>')+'</div>'+
+    (m.outcome?'<div class="moutcome"><span class="ol">Outcome</span>'+esc(m.outcome)+'</div>':'')+
     '<div class="mbranches">'+branches+'</div>'+
     '<div class="mnote">'+(m.thin?'Built from the title only — no abstract available. ':'')+
     'AI-generated — verify against the paper before citing</div></div>';
@@ -605,7 +672,7 @@ $('setlink').onclick=()=>{
 };
 $('key').onchange=e=>{const v=e.target.value.trim();
   v?localStorage.setItem(AK,v):localStorage.removeItem(AK);
-  localStorage.removeItem(MOD);};
+  localStorage.removeItem(MOD);localStorage.removeItem(BAD);};
 $('mail').onchange=e=>{const v=e.target.value.trim();
   v?localStorage.setItem(MK,v):localStorage.removeItem(MK);};
 load();
