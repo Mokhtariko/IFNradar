@@ -69,6 +69,10 @@ h1{font-size:21px;font-weight:600;letter-spacing:-.02em}
 .ptags{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
 .dtag{font-size:11px;background:var(--bg);border:1px solid var(--line);color:var(--muted);
   padding:2px 9px;border-radius:100px}
+.oa{font-size:11px;padding:2px 9px;border-radius:100px;font-weight:500;white-space:nowrap}
+.oa.free{background:#ECFDF5;border:1px solid #A7F3D0;color:#047857;text-decoration:none}
+.oa.free:hover{background:#D1FAE5;border-color:#6EE7B7}
+.oa.closed{background:var(--bg);border:1px solid var(--line);color:var(--faint)}
 .sumbtn{margin-left:auto;font-size:12px;color:var(--accent);font-weight:500;
   border:1px solid var(--line);border-radius:6px;padding:5px 11px;white-space:nowrap}
 .sumbtn:hover:not(:disabled){border-color:var(--accent)}
@@ -78,6 +82,29 @@ h1{font-size:21px;font-weight:600;letter-spacing:-.02em}
   white-space:pre-wrap}
 .psum .tag{display:block;font-family:'IBM Plex Sans';font-size:10.5px;color:var(--faint);
   margin-top:9px;letter-spacing:.03em}
+
+/* mind map */
+.mindmap{margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
+.mhead{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:2px}
+.mroot{display:inline-block;background:var(--ink);color:#fff;font-weight:600;font-size:13.5px;
+  padding:8px 15px;border-radius:100px}
+.msrc{font-size:10.5px;color:var(--faint);border:1px solid var(--line);
+  padding:2px 8px;border-radius:100px}
+.msrc.deep{color:#047857;border-color:#A7F3D0;background:#ECFDF5;font-weight:500}
+.mbranches{padding-left:17px;border-left:2px solid var(--line);margin-left:15px;padding-top:8px}
+.mb{position:relative;padding-left:15px;margin-bottom:13px}
+.mb:last-child{margin-bottom:0}
+.mb::before{content:'';position:absolute;left:-19px;top:11px;width:17px;height:2px;
+  background:var(--bc);border-radius:2px}
+.mb::after{content:'';position:absolute;left:-3px;top:7px;width:9px;height:9px;
+  border-radius:50%;background:var(--bc)}
+.mbl{font-size:12.5px;font-weight:600;color:var(--bc);letter-spacing:.01em;margin-bottom:5px}
+.mb ul{list-style:none;padding-left:0}
+.mb li{font-family:'Spectral',Georgia,serif;font-size:14px;line-height:1.55;color:#374151;
+  padding-left:13px;position:relative;margin-bottom:4px}
+.mb li::before{content:'';position:absolute;left:0;top:9px;width:5px;height:5px;
+  border-radius:50%;background:var(--line)}
+.mnote{font-size:10.5px;color:var(--faint);margin-top:13px;line-height:1.5}
 
 .empty{text-align:center;padding:52px 20px;color:var(--muted);font-size:14px;line-height:1.7}
 .empty b{display:block;color:var(--ink);font-size:16px;margin-bottom:7px;font-weight:600}
@@ -165,7 +192,7 @@ const DOMAINS=[
  ['Dosing',['subcutaneous','intravenous','pharmacokinetic','dose','regimen','exposure']]
 ];
 
-let papers=[], activeDomain='', sortBy='new';
+let papers=[], activeDomain='', sortBy='new', freeOnly=false;
 const $=id=>document.getElementById(id);
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const status=(m,err)=>{const s=$('status');s.textContent=m;s.className='status'+(err?' err':'');};
@@ -253,11 +280,15 @@ async function pubmed(term,win){
       const src=a.querySelector('ArticleDate')||a.querySelector('Journal > JournalIssue > PubDate');
       if(src){const gg=s=>{const e=src.querySelector(s);return e?e.textContent.trim():'';};
         const y=gg('Year'); date=y?[y,gg('Month'),gg('Day')].filter(Boolean).join(' '):gg('MedlineDate');}
-      let doi=''; a.querySelectorAll('ArticleId').forEach(i2=>{
-        if(i2.getAttribute('IdType')==='doi')doi=i2.textContent.trim();});
+      let doi='',pmcid='';
+      a.querySelectorAll('ArticleId').forEach(i2=>{
+        const t=i2.getAttribute('IdType');
+        if(t==='doi')doi=i2.textContent.trim();
+        if(t==='pmc')pmcid=i2.textContent.trim();
+      });
       const ab=[]; a.querySelectorAll('Abstract > AbstractText').forEach(t=>{
         const l=t.getAttribute('Label'); ab.push((l?l+': ':'')+t.textContent.trim());});
-      out.push({pmid,doi,title:g('ArticleTitle')||'[No title]',
+      out.push({pmid,doi,pmcid,oa:pmcid?1:0,title:g('ArticleTitle')||'[No title]',
         journal:g('Journal > ISOAbbreviation')||g('Journal > Title')||'—',
         date,abstract:ab.join('\n\n'),src:'PubMed'});
     });
@@ -273,6 +304,8 @@ async function epmc(term){
   if(!r.ok)throw new Error('Europe PMC '+r.status);
   return (((await r.json()).resultList||{}).result||[]).map(x=>({
     pmid:x.pmid||'',doi:x.doi||'',title:x.title||'[No title]',
+    pmcid:x.pmcid||'',
+    oa:(x.isOpenAccess==='Y'||x.inEPMC==='Y')?1:0,
     journal:(x.journalInfo&&x.journalInfo.journal&&
       (x.journalInfo.journal.medlineAbbreviation||x.journalInfo.journal.title))
       ||(x.source==='PPR'?'Preprint':'—'),
@@ -330,6 +363,8 @@ async function search(){
       if(!ex.abstract&&it.abstract)ex.abstract=it.abstract;
       if(!ex.pmid&&it.pmid)ex.pmid=it.pmid;
       if(!ex.doi&&it.doi)ex.doi=it.doi;
+      if(!ex.pmcid&&it.pmcid)ex.pmcid=it.pmcid;
+      if(it.oa)ex.oa=1;
       if((!ex.journal||ex.journal==='—')&&it.journal)ex.journal=it.journal;
       return;
     }
@@ -366,52 +401,137 @@ async function pickModel(key){
   return best;
 }
 
+/* ---------- full text, free, for open-access papers only ---------- */
+async function fullText(pmcid){
+  if(!pmcid)return null;
+  try{
+    const r=await fetch('https://www.ebi.ac.uk/europepmc/webservices/rest/'+pmcid+'/fullTextXML');
+    if(!r.ok)return null;
+    const doc=new DOMParser().parseFromString(await r.text(),'text/xml');
+    const body=doc.querySelector('body');
+    if(!body)return null;
+    const secs=[];
+    body.querySelectorAll(':scope > sec').forEach(sec=>{
+      const t=sec.querySelector(':scope > title');
+      const label=t?t.textContent.trim():'';
+      const txt=[...sec.querySelectorAll('p')].map(x=>x.textContent.trim())
+        .filter(Boolean).join(' ').replace(/\s+/g,' ');
+      if(txt)secs.push({label,txt});
+    });
+    if(!secs.length)return null;
+
+    // Prefer what a Medical reader actually needs if the paper is long.
+    const rank=s=>{
+      const l=(s.label||'').toLowerCase();
+      if(/result|finding|outcome/.test(l))return 0;
+      if(/discussion|conclusion/.test(l))return 1;
+      if(/case|presentation/.test(l))return 2;
+      if(/introduction|background/.test(l))return 3;
+      if(/method|material|statistic/.test(l))return 4;
+      return 3;
+    };
+    const ordered=secs.slice().sort((a,b)=>rank(a)-rank(b));
+    let out='',cap=26000;
+    for(const s of ordered){
+      const chunk=(s.label?s.label+': ':'')+s.txt+'\n\n';
+      if(out.length+chunk.length>cap)break;
+      out+=chunk;
+    }
+    return out.trim()||null;
+  }catch(e){return null;}
+}
+
 async function summarise(i,btn){
   const key=$('key').value.trim();
   if(!key){status('Add your Gemini API key in Settings first',true);$('settings').style.display='block';return;}
   const p=papers[i];
-  btn.disabled=true; btn.textContent='Summarising…';
+  btn.disabled=true; btn.textContent='Reading…';
   try{
     const model=await pickModel(key);
-    const prompt=`Summarise this published record for an internal Medical Affairs reader following anifrolumab (Saphnelo). You are not writing promotional content and not making clinical recommendations.
+
+    // Open-access paper? Read the whole thing, not just the abstract.
+    let body=null,deep=false;
+    if(p.oa&&p.pmcid){
+      btn.textContent='Fetching full text…';
+      body=await fullText(p.pmcid);
+      if(body)deep=true;
+    }
+    if(!body)body=p.abstract||'';
+    btn.textContent='Mapping…';
+
+    const prompt=`Break this published record into a mind map for an internal Medical Affairs reader following anifrolumab (Saphnelo). You are not writing promotional content and not making clinical recommendations.
 
 RULES
-- Three or four short sentences. Plain prose, no headings, no bullets.
-- State only what this record reports. Never add anything not in the text below.
-- Never compare anifrolumab to another product, and never call findings positive, promising, encouraging or superior.
-- If it is a case report or small series, say so.
-- If it describes use outside the approved lupus indication, say so plainly and neutrally. Do not endorse it.
-- If only a title is given with no abstract, say the abstract was not available and describe only what the title states.
-- No dosing advice and no guidance on individual patient management.
+- Use ONLY what the text below states. Never add anything from outside it.
+- Never compare anifrolumab to another product, and never call findings positive, promising, encouraging or superior. State what was observed, neutrally.
+- If it is a case report or small series, make that the first branch.
+- If it describes use outside the approved lupus indication, include a branch labelled exactly "Outside approved use".
+- ${deep?'You have the full text. Include concrete numbers, doses, timepoints and outcome measures where the paper states them.':'You have the abstract only. Stay at the level it reports and do not infer detail it omits.'}
+- No dosing advice, no guidance on individual patient management.
+
+Return ONLY valid JSON, no markdown fencing, no preamble:
+{"centre":"4-7 word core subject",
+ "thin":${deep?'false':(p.abstract?'false':'true')},
+ "branches":[{"label":"2-3 words","points":["short phrase","short phrase"]}]}
+
+Give ${deep?'4 to 6':'3 to 5'} branches, each with ${deep?'2 to 4':'1 to 3'} points. Keep every point under ${deep?'18':'14'} words.
+Choose branch labels that fit this record — for example Design, Population, Findings, Safety, Limitations.
 
 TITLE: ${p.title}
 JOURNAL: ${p.journal} (${p.date||'no date'})
-ABSTRACT: ${p.abstract||'[not available]'}`;
+${deep?'FULL TEXT':'ABSTRACT'}: ${body||'[not available]'}`;
 
     const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+
       model+':generateContent?key='+encodeURIComponent(key),{
       method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({contents:[{parts:[{text:prompt}]}],
-        generationConfig:{temperature:0.1,maxOutputTokens:500}})});
+        generationConfig:{temperature:0.1,maxOutputTokens:deep?1100:700}})});
     if(!r.ok){
-      if(r.status===404){localStorage.removeItem(MOD);throw new Error('Model changed — press Summarise again');}
+      if(r.status===404){localStorage.removeItem(MOD);throw new Error('Model changed — press again');}
       if(r.status===429)throw new Error('Rate limit — wait a minute');
       if(r.status===400||r.status===403)throw new Error('Key rejected — check it in Settings');
       throw new Error('Gemini error '+r.status);
     }
     const c=((await r.json()).candidates||[])[0];
     if(!c||c.finishReason==='SAFETY')throw new Error('No summary returned');
-    p.summary=((c.content||{}).parts||[]).map(x=>x.text||'').join('').trim();
+    const raw=((c.content||{}).parts||[]).map(x=>x.text||'').join('').trim();
+    const clean=raw.replace(/```json|```/g,'').trim();
+    const s=clean.indexOf('{'), e=clean.lastIndexOf('}');
+    if(s<0||e<0)throw new Error('Could not read the response');
+    const map=JSON.parse(clean.slice(s,e+1));
+    if(!map.branches||!map.branches.length)throw new Error('Empty map returned');
+    map.deep=deep;
+    p.map=map;
     save(); render();
   }catch(e){
-    btn.disabled=false; btn.textContent='Summarise';
+    btn.disabled=false; btn.textContent=(p.oa&&p.pmcid)?'Map full text':'Map abstract';
     status(e.message,true);
   }
 }
 
+/* ---------- mind map rendering (local, no API) ---------- */
+const BCOL=['#C2410C','#0D9488','#4338CA','#B45309','#9F1239','#475569'];
+function mapHTML(m){
+  const esc=s=>String(s==null?'':s).replace(/[<>&]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]));
+  const branches=(m.branches||[]).map((b,i)=>
+    '<div class="mb" style="--bc:'+BCOL[i%BCOL.length]+'">'+
+      '<div class="mbl">'+esc(b.label)+'</div>'+
+      '<ul>'+(b.points||[]).map(pt=>'<li>'+esc(pt)+'</li>').join('')+'</ul>'+
+    '</div>').join('');
+  return '<div class="mindmap">'+
+    '<div class="mhead"><span class="mroot">'+esc(m.centre||'Summary')+'</span>'+
+      (m.deep?'<span class="msrc deep">from full text</span>'
+             :'<span class="msrc">from abstract</span>')+'</div>'+
+    '<div class="mbranches">'+branches+'</div>'+
+    '<div class="mnote">'+(m.thin?'Built from the title only — no abstract available. ':'')+
+    'AI-generated — verify against the paper before citing</div></div>';
+}
+
 /* ---------- render ---------- */
 function shown(){
-  let list=papers.filter(p=>!activeDomain||domainsOf(p).includes(activeDomain));
+  let list=papers.filter(p=>
+    (!activeDomain||domainsOf(p).includes(activeDomain)) &&
+    (!freeOnly||p.oa));
   list.sort((a,b)=>sortBy==='new'?dkey(b)-dkey(a):dkey(a)-dkey(b));
   return list;
 }
@@ -436,6 +556,14 @@ function render(){
     };
     mk('All','',papers.length);
     DOMAINS.forEach(([n])=>{if(counts[n])mk(n,n,counts[n]);});
+    const nFree=papers.filter(p=>p.oa).length;
+    if(nFree){
+      const f=document.createElement('button');
+      f.className='chip free'+(freeOnly?' on':'');
+      f.innerHTML='Free to read<b>'+nFree+'</b>';
+      f.onclick=()=>{freeOnly=!freeOnly;render();};
+      bar.appendChild(f);
+    }
     const s=document.createElement('select');
     s.className='sortsel';
     s.innerHTML='<option value="new">Newest first</option><option value="old">Oldest first</option>';
@@ -449,15 +577,20 @@ function render(){
     const i=papers.indexOf(p);
     const el=document.createElement('article');
     el.className='paper';
+    const freeLink=p.pmcid?'https://www.ncbi.nlm.nih.gov/pmc/articles/'+p.pmcid+'/'
+      :(p.pmid?'https://europepmc.org/article/MED/'+p.pmid:linkOf(p));
+    const access=p.oa
+      ? '<a class="oa free" href="'+freeLink+'" target="_blank" rel="noopener">Free full text</a>'
+      : '<span class="oa closed">Abstract only</span>';
     el.innerHTML=
       '<div class="pmeta">'+p.journal+' · '+nice(p)+(p.pmid?' · PMID '+p.pmid:'')+'</div>'+
       '<div class="ptitle"><a href="'+linkOf(p)+'" target="_blank" rel="noopener">'+p.title+'</a></div>'+
       '<div class="ptags">'+
+        access+
         domainsOf(p).map(d=>'<span class="dtag">'+d+'</span>').join('')+
-        (p.summary?'':'<button class="sumbtn">Summarise</button>')+
+        (p.map?'':'<button class="sumbtn">'+(p.oa&&p.pmcid?'Map full text':'Map abstract')+'</button>')+
       '</div>'+
-      (p.summary?'<div class="psum">'+p.summary+
-        '<span class="tag">AI-generated from the abstract — verify before citing</span></div>':'');
+      (p.map?mapHTML(p.map):'');
     const b=el.querySelector('.sumbtn');
     if(b)b.onclick=()=>summarise(i,b);
     box.appendChild(el);
