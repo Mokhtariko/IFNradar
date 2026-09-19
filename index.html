@@ -98,6 +98,29 @@ a{color:inherit}
 .qchip:hover{border-color:var(--ink);color:var(--ink)}
 .answer{margin-top:16px;background:var(--card);border:1px solid var(--rule);border-radius:8px;
   padding:20px 22px}
+
+/* ---------- topic editor ---------- */
+.topicpanel{margin-top:16px;background:var(--card);border:1px solid var(--rule);
+  border-radius:8px;padding:20px 22px}
+.thead{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:16px}
+.thead h3{font-family:'Spectral',Georgia,serif;font-size:19px;font-weight:500}
+.thead p{font-size:12.5px;color:var(--muted);line-height:1.5;margin-top:4px;max-width:52ch}
+.tclose{font-size:12.5px;color:var(--muted);border-bottom:1px solid var(--rule);flex:none}
+.tclose:hover{color:var(--ink);border-color:var(--ink)}
+.tcard{border:1px solid var(--rule);border-radius:7px;padding:13px 14px;margin-bottom:10px}
+.trow{display:flex;gap:9px;align-items:center;margin-bottom:10px}
+.tname{flex:1;min-width:0;border:none;border-bottom:1px solid var(--rule);background:transparent;
+  font-size:14.5px;font-weight:600;color:var(--ink);padding:3px 1px}
+.tname:focus{outline:none;border-color:var(--signal)}
+.tdel{font-size:19px;color:var(--muted-2);line-height:1;padding:0 5px;flex:none}
+.tdel:hover{color:var(--competitor)}
+.tlab{display:block;font-family:'IBM Plex Mono';font-size:9.5px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--muted-2);margin:9px 0 4px}
+.ttrig,.texp{width:100%;border:1px solid var(--rule);border-radius:5px;background:var(--paper);
+  padding:7px 9px;font-size:12.5px;color:var(--ink);line-height:1.55;resize:vertical}
+.ttrig:focus,.texp:focus{outline:2px solid var(--signal);outline-offset:1px}
+.tactions{display:flex;gap:9px;margin-top:14px;flex-wrap:wrap}
+.tbtn{width:auto;flex:none;padding:9px 16px;font-size:12.5px}
 .thinking{font-family:'IBM Plex Mono';font-size:12px;color:var(--muted-2)}
 .ans-empty{font-size:13.5px;color:var(--muted);line-height:1.6}
 .ans-empty b{color:var(--ink)}
@@ -303,12 +326,11 @@ Saphnelo</textarea>
       <div class="field">
         <label for="model">Model</label>
         <select id="model">
-          <option value="gemini-2.5-flash">gemini-2.5-flash</option>
-          <option value="gemini-2.5-flash-lite">gemini-2.5-flash-lite</option>
-          <option value="gemini-2.0-flash">gemini-2.0-flash</option>
+          <option value="">— press Detect models —</option>
         </select>
-        <div class="hint">If a model returns 404, pick another — Google retires names periodically.</div>
+        <div class="hint">Asks Google which models your key can actually use, so the list is never out of date.</div>
       </div>
+      <button class="btn ghost" id="detect">Detect models</button>
       <button class="btn ghost" id="classify">Write AI summaries</button>
     </section>
 
@@ -326,6 +348,21 @@ Saphnelo</textarea>
         <button class="btn askbtn" id="askgo">Ask</button>
       </div>
       <div class="chips" id="askchips"></div>
+      <div class="topicpanel" id="topicpanel" style="display:none">
+        <div class="thead">
+          <div>
+            <h3>Topics</h3>
+            <p>Papers rarely use the word you search for. Each topic maps your question word to what abstracts actually say.</p>
+          </div>
+          <button class="tclose" id="tclose">Done</button>
+        </div>
+        <div id="topicbox"></div>
+        <div class="tactions">
+          <button class="btn ghost tbtn" id="taddnew">Add topic</button>
+          <button class="btn ghost tbtn" id="treset">Reset to defaults</button>
+          <button class="btn tbtn" id="tsave">Save</button>
+        </div>
+      </div>
       <div class="answer" id="answer" style="display:none"></div>
     </div>
 
@@ -497,7 +534,9 @@ async function load(){
   try{const raw=localStorage.getItem(KEY);if(raw)corpus=JSON.parse(raw);}catch(e){corpus=[];}
   const k=localStorage.getItem(AKEY);if(k)$('apikey').value=k;
   const m=localStorage.getItem(MKEY);if(m)$('mail').value=m;
-  const md=localStorage.getItem(MODKEY);if(md)$('model').value=md;
+  const md=localStorage.getItem(MODKEY);
+  if(md){$('model').innerHTML='<option value="'+md+'">'+md+'</option>';$('model').value=md;}
+  if(k)detectModels(true);
   render();
 }
 async function save(){
@@ -757,6 +796,53 @@ async function runCite(){
   busy(false);
 }
 
+/* ---------- model discovery ----------
+   Google retires and renames models regularly, so hardcoding a list guarantees
+   it breaks. Ask the key what it can reach instead. */
+async function detectModels(silent){
+  const key=$('apikey').value.trim();
+  if(!key){if(!silent)toast('Enter your Gemini key first');return;}
+  const sel=$('model');
+  try{
+    const res=await fetch('https://generativelanguage.googleapis.com/v1beta/models?key='+
+      encodeURIComponent(key)+'&pageSize=200');
+    if(!res.ok){
+      let d='';try{const e=await res.json();d=(e.error&&e.error.message)||'';}catch(_){}
+      throw new Error(res.status===400||res.status===403?'Key rejected by Google':
+        'Lookup failed '+res.status+(d?': '+d.slice(0,70):''));
+    }
+    const j=await res.json();
+    const usable=(j.models||[])
+      .filter(m=>(m.supportedGenerationMethods||[]).includes('generateContent'))
+      .map(m=>(m.name||'').replace(/^models\//,''))
+      .filter(n=>n&&!/embedding|aqa|imagen|veo|tts|image-generation|native-audio/i.test(n));
+    if(!usable.length)throw new Error('No text models available to this key');
+
+    // Prefer flash: free-tier eligible and fast. Lite is cheaper but weaker at
+    // grounded answering, so it ranks below plain flash.
+    const rank=n=>{
+      let s=0;
+      if(/flash/i.test(n))s-=10;
+      if(/lite/i.test(n))s+=2;
+      if(/preview|exp|thinking/i.test(n))s+=5;
+      const v=parseFloat((n.match(/(\d+\.\d+)/)||[])[1]||'0');
+      return s-v;
+    };
+    usable.sort((a,b)=>rank(a)-rank(b));
+
+    const prev=localStorage.getItem(MODKEY);
+    sel.innerHTML=usable.map(n=>'<option value="'+n+'">'+n+'</option>').join('');
+    sel.value=(prev&&usable.includes(prev))?prev:usable[0];
+    localStorage.setItem(MODKEY,sel.value);
+    if(!silent){
+      log('Models available: '+usable.length+' → using '+sel.value,'ok');
+      toast('Found '+usable.length+' models');
+    }
+  }catch(e){
+    if(!silent){log('Model detection failed: '+e.message,'err');toast(e.message);}
+  }
+}
+
 /* ---------- Gemini call (shared) ----------
    Free tier: ~10 requests/min, ~250/day, Flash models only, and Google may use
    free-tier prompts to improve their products. Enabling billing on the project
@@ -764,8 +850,34 @@ async function runCite(){
 async function gemini(prompt,maxTokens){
   const key=$('apikey').value.trim();
   if(!key)throw new Error('No API key set');
-  const model=$('model').value;
-  const res=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+
+  if(!$('model').value){
+    await detectModels(true);
+    if(!$('model').value)throw new Error('No model selected — press Detect models');
+  }
+  let res=await geminiCall(key,$('model').value,prompt,maxTokens);
+  if(res.status===404){
+    // Model retired or renamed since last use — refresh the list and retry once.
+    await detectModels(true);
+    if($('model').value)res=await geminiCall(key,$('model').value,prompt,maxTokens);
+  }
+  if(!res.ok){
+    let detail='';
+    try{const e=await res.json();detail=(e.error&&e.error.message)||'';}catch(_){}
+    if(res.status===429)throw new Error('Rate limit hit (free tier is ~10/min). Wait a minute.');
+    if(res.status===400&&/API key/i.test(detail))throw new Error('Key rejected — check it is a Gemini key');
+    if(res.status===404)throw new Error('Model not available — press Detect models');
+    if(res.status===403)throw new Error('Access denied — check the key and that the API is enabled');
+    throw new Error('Gemini '+res.status+(detail?': '+detail.slice(0,90):''));
+  }
+  const data=await res.json();
+  const c=data.candidates&&data.candidates[0];
+  if(!c)throw new Error('Empty response from Gemini');
+  if(c.finishReason==='SAFETY')throw new Error('Response blocked by Gemini safety filter');
+  return ((c.content&&c.content.parts)||[]).map(p=>p.text||'').join('');
+}
+
+function geminiCall(key,model,prompt,maxTokens){
+  return fetch('https://generativelanguage.googleapis.com/v1beta/models/'+
       model+':generateContent?key='+encodeURIComponent(key),{
     method:'POST',
     headers:{'Content-Type':'application/json'},
@@ -774,19 +886,6 @@ async function gemini(prompt,maxTokens){
       generationConfig:{temperature:0.1,maxOutputTokens:maxTokens||1200}
     })
   });
-  if(!res.ok){
-    let detail='';
-    try{const e=await res.json();detail=(e.error&&e.error.message)||'';}catch(_){}
-    if(res.status===429)throw new Error('Rate limit hit (free tier is ~10/min). Wait a minute.');
-    if(res.status===400&&/API key/i.test(detail))throw new Error('Key rejected — check it is a Gemini key');
-    if(res.status===404)throw new Error('Model not found — try another in the dropdown');
-    throw new Error('Gemini '+res.status+(detail?': '+detail.slice(0,90):''));
-  }
-  const data=await res.json();
-  const c=data.candidates&&data.candidates[0];
-  if(!c)throw new Error('Empty response from Gemini');
-  if(c.finishReason==='SAFETY')throw new Error('Response blocked by Gemini safety filter');
-  return ((c.content&&c.content.parts)||[]).map(p=>p.text||'').join('');
 }
 
 /* ---------- AI summaries ---------- */
@@ -824,7 +923,7 @@ Return ONLY a valid JSON array, no markdown fencing and no preamble:
    Abstracts rarely use the word you search for. "Haematological" almost never
    appears; "thrombocytopenia" does. These sets bridge that gap at retrieval time.
    Edit freely — each entry is a trigger list followed by the terms it expands to. */
-const DOMAINS=[
+const DEFAULT_DOMAINS=[
  {name:'Haematological',
   trigger:['haematolog','hematolog','blood','cytopenia','marrow'],
   expand:['thrombocytopenia','thrombocytopaenia','platelet','anaemia','anemia','haemolytic','hemolytic',
@@ -865,6 +964,74 @@ const DOMAINS=[
   expand:['dose','dosing','subcutaneous','intravenous','infusion','pharmacokinetic','exposure','300 mg','regimen']}
 ];
 
+let DOMAINS=DEFAULT_DOMAINS.map(d=>({...d}));
+const DKEY='ifnradar:domains';
+
+function loadDomains(){
+  try{
+    const raw=localStorage.getItem(DKEY);
+    if(raw){
+      const saved=JSON.parse(raw);
+      if(Array.isArray(saved)&&saved.length)DOMAINS=saved;
+    }
+  }catch(e){/* fall back to defaults */}
+}
+async function saveDomains(){
+  try{localStorage.setItem(DKEY,JSON.stringify(DOMAINS));}
+  catch(e){toast('Could not save topics');}
+}
+
+/* ---------- topic editor ---------- */
+function openTopics(){
+  const box=$('topicbox');
+  box.innerHTML=DOMAINS.map((d,i)=>
+    '<div class="tcard">'+
+      '<div class="trow"><input class="tname" data-i="'+i+'" value="'+
+        (d.name||'').replace(/"/g,'&quot;')+'" placeholder="Topic name">'+
+        '<button class="tdel" data-i="'+i+'" title="Delete topic">×</button></div>'+
+      '<label class="tlab">When I ask about…</label>'+
+      '<input class="ttrig" data-i="'+i+'" value="'+(d.trigger||[]).join(', ').replace(/"/g,'&quot;')+'">'+
+      '<label class="tlab">…search papers for</label>'+
+      '<textarea class="texp" data-i="'+i+'" rows="3">'+(d.expand||[]).join(', ')+'</textarea>'+
+    '</div>').join('');
+  $('topicpanel').style.display='block';
+}
+function collectTopics(){
+  const out=[];
+  document.querySelectorAll('#topicbox .tcard').forEach((card,i)=>{
+    const name=card.querySelector('.tname').value.trim();
+    const split=v=>v.split(',').map(s=>s.trim().toLowerCase()).filter(Boolean);
+    const trigger=split(card.querySelector('.ttrig').value);
+    const expand=split(card.querySelector('.texp').value);
+    if(name&&trigger.length&&expand.length)out.push({name,trigger,expand});
+  });
+  return out;
+}
+async function saveTopics(){
+  const next=collectTopics();
+  if(!next.length){toast('Every topic needs a name and both lists');return;}
+  DOMAINS=next;
+  await saveDomains();
+  _reCacheClear();
+  $('topicpanel').style.display='none';
+  toast('Saved '+next.length+' topics');
+}
+async function resetTopics(){
+  if(!confirm('Discard your edits and restore the original topics?'))return;
+  DOMAINS=DEFAULT_DOMAINS.map(d=>({...d}));
+  localStorage.removeItem(DKEY);
+  _reCacheClear();
+  openTopics();
+  toast('Topics reset');
+}
+function addTopic(){
+  DOMAINS=collectTopics();
+  DOMAINS.push({name:'New topic',trigger:['keyword'],expand:['term one','term two']});
+  openTopics();
+  const last=$('topicbox').querySelector('.tcard:last-child .tname');
+  if(last){last.focus();last.select();}
+}
+
 function expandQuery(q){
   const lower=q.toLowerCase();
   const out=new Set();
@@ -880,7 +1047,8 @@ function expandQuery(q){
   return {terms:[...out],domains:matched};
 }
 
-const _reCache={};
+let _reCache={};
+function _reCacheClear(){_reCache={};}
 function termRe(t){
   // Word-boundary match, so "cutaneous" does not fire inside "subcutaneous".
   // Prefix terms deliberately end without \b (e.g. "dermatolog" → dermatology/dermatological).
@@ -1166,7 +1334,18 @@ function render(){
 /* ---------- wire ---------- */
 $('scan').onclick=runScan;
 $('runcite').onclick=runCite;
+$('detect').onclick=()=>detectModels(false);
 $('askgo').onclick=runAsk;
+$('tclose').onclick=()=>{$('topicpanel').style.display='none';};
+$('tsave').onclick=saveTopics;
+$('treset').onclick=resetTopics;
+$('taddnew').onclick=addTopic;
+$('topicbox').onclick=e=>{
+  if(!e.target.classList.contains('tdel'))return;
+  const next=collectTopics();
+  next.splice(parseInt(e.target.dataset.i,10),1);
+  DOMAINS=next;openTopics();
+};
 $('ask').onkeydown=e=>{if(e.key==='Enter')runAsk();};
 ['Haematological manifestations?','Skin and cutaneous outcomes?','Safety signals reported?',
  'IFN gene signature as a predictor?','Use outside lupus?'].forEach(q=>{
@@ -1175,6 +1354,16 @@ $('ask').onkeydown=e=>{if(e.key==='Enter')runAsk();};
   b.onclick=()=>{$('ask').value='What is published on '+q.replace(/\?$/,'')+'?';runAsk();};
   $('askchips').appendChild(b);
 });
+(()=>{
+  const b=document.createElement('button');
+  b.className='qchip';b.textContent='⚙ Edit topics';
+  b.onclick=()=>{
+    const p=$('topicpanel');
+    if(p.style.display==='block'){p.style.display='none';return;}
+    openTopics();
+  };
+  $('askchips').appendChild(b);
+})();
 $('model').onchange=e=>localStorage.setItem(MODKEY,e.target.value);
 $('sortkw').onclick=ruleClassifyAll;
 $('strict').onchange=render;
@@ -1184,13 +1373,15 @@ $('classify').onclick=classifyAll;
 $('digest').onclick=copyDigest;
 $('csv').onclick=downloadCSV;
 $('apikey').onchange=e=>{const v=e.target.value.trim();
-  v?localStorage.setItem(AKEY,v):localStorage.removeItem(AKEY);};
+  v?localStorage.setItem(AKEY,v):localStorage.removeItem(AKEY);
+  if(v)detectModels(true);};
 $('mail').onchange=e=>{const v=e.target.value.trim();
   v?localStorage.setItem(MKEY,v):localStorage.removeItem(MKEY);};
 $('wipe').onclick=async()=>{
   if(!confirm('Delete all '+corpus.length+' stored records? This cannot be undone.'))return;
   corpus=[];await save();render();toast('Corpus cleared');
 };
+loadDomains();
 load();
 </script>
 </body>
