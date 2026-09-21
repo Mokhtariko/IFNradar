@@ -250,22 +250,26 @@ const DRUG=/\b(anifrolumab|saphnelo)\b/i;
 /* Domains: a paper is tagged by which of these its text matches.
    No AI needed — instant and free. */
 const DOMAINS=[
- ['Skin',['cutaneous','clasi','rash','mucocutaneous','dermatolog','alopecia','discoid',
+ ['Skin',['skin','cutaneous','clasi','rash','mucocutaneous','dermatolog','alopecia','discoid',
    'morphea','lichen sclerosus','erythema','skin lesion','panniculitis','photosensitiv']],
- ['Haematological',['thrombocytopenia','thrombocytopaenia','platelet','anaemia','anemia',
+ ['Haematological',['haematolog','hematolog','haematologic','hematologic',
+   'thrombocytopenia','thrombocytopaenia','platelet','anaemia','anemia',
    'haemolytic','hemolytic','neutropenia','leukopenia','leucopenia','lymphopenia','pancytopenia',
-   'cytopenia','haemoglobin','hemoglobin','coombs','bone marrow']],
+   'cytopenia','bicytopenia','haemoglobin','hemoglobin','coombs','bone marrow','aplasia',
+   'haemophagocytic','hemophagocytic','lymphohistiocytosis','thrombotic thrombocytopenic']],
  ['Renal',['nephritis','renal','kidney','proteinuria','glomerul','creatinine','egfr']],
  ['Joints',['arthritis','joint','swollen joint','tender joint','arthralgia','musculoskeletal']],
  ['Neuropsychiatric',['neuropsychiatric','cognitive','seizure','headache','fatigue','depression','neurolog']],
- ['Cardiopulmonary',['pericarditis','myocarditis','pulmonary','pleuritis','serositis','interstitial lung']],
+ ['Cardiopulmonary',['cardiac','cardiopulmonary','pericarditis','myocarditis','pulmonary',
+   'pleuritis','serositis','interstitial lung']],
  ['Safety',['adverse event','adverse reaction','safety','tolerability','herpes zoster','infection',
    'malignan','discontinuation','infusion reaction','treatment-emergent']],
  ['Biomarker',['interferon gene signature','ifn signature','biomarker','predictor','responder',
    'anti-dsdna','complement','transcriptom','gene expression']],
  ['Trials',['randomised','randomized','tulip','phase 3','phase iii','phase 2','phase ii',
    'placebo-controlled','double-blind','post hoc','open-label extension']],
- ['Real-world',['real-world','registry','observational','routine care','clinical practice','retrospective']],
+ ['Real-world',['real-world','registry','observational','routine care','clinical practice',
+   'retrospective','multicenter','multicentre']],
  ['Pregnancy',['pregnancy','pregnant','lactation','breastfeed','fetal','foetal']],
  ['Dosing',['subcutaneous','intravenous','pharmacokinetic','dose','regimen','exposure']]
 ];
@@ -276,18 +280,31 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const status=(m,err)=>{const s=$('status');s.textContent=m;s.className='status'+(err?' err':'');};
 
 /* ---------- word-boundary match so "cutaneous" misses "subcutaneous" ---------- */
+// Terms longer than six letters match as prefixes (dermatolog → dermatological).
+// These must NOT: "erythema" would match "erythematosus", which sits in nearly
+// every lupus paper title and would tag almost everything as Skin.
+const EXACT=new Set(['erythema','complement']);
 const cache={};
 function re(t){
   if(!cache[t]){
     const esc=t.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-    const tail=(/[a-z]$/.test(t)&&t.length>6&&!t.includes(' '))?'':'\\b';
-    cache[t]=new RegExp('\\b'+esc+tail,'i');
+    const prefix=!EXACT.has(t)&&/[a-z]$/.test(t)&&t.length>6&&!t.includes(' ');
+    cache[t]=new RegExp('\\b'+esc+(prefix?'':'\\b'),'i');
   }
   return cache[t];
 }
 function domainsOf(p){
-  const hay=(p.title||'')+' '+(p.abstract||'');
-  return DOMAINS.filter(([,terms])=>terms.some(t=>re(t).test(hay))).map(([n])=>n);
+  // The title says what a paper is ABOUT. The body often opens with background —
+  // a letter on haematology may begin "anifrolumab has shown efficacy in cutaneous
+  // and musculoskeletal domains", which says nothing about this paper's subject.
+  // So: one hit in the title is enough; the body must mention a domain repeatedly.
+  const title=p.title||'';
+  const body=(p.abstract||'')+' '+(p.pasted||'');
+  const need=p.pasted?3:2;          // longer pasted text needs more evidence
+  return DOMAINS.filter(([,terms])=>{
+    if(terms.some(t=>re(t).test(title)))return true;
+    return terms.filter(t=>re(t).test(body)).length>=need;
+  }).map(([n])=>n);
 }
 
 /* ---------- dates ---------- */
@@ -783,7 +800,7 @@ function shown(){
   let list=papers.filter(p=>
     (!activeDomain||domainsOf(p).includes(activeDomain)) &&
     (!freeOnly||p.oa) &&
-    (!cut||dkey(p)>=cut));
+    (!cut||dkey(p)>=cut||dkey(p)===0));
   list.sort((a,b)=>sortBy==='new'?dkey(b)-dkey(a):dkey(a)-dkey(b));
   return list;
 }
